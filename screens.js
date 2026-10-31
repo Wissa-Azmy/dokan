@@ -114,6 +114,8 @@ export function renderShopHome(root, shopId) {
         el('p', { class: disabled ? 'form-error' : 'muted' }, disabled ? t('accessDisabled') : t('comingNext')),
       ),
       disabled || !member ? null : el('nav', { class: 'tiles' },
+        tile(`#/shop/${shopId}/products`, 'box', t('products')),
+        manager ? tile(`#/shop/${shopId}/categories`, 'tag', t('categories')) : null,
         tile(`#/shop/${shopId}/locations`, 'store', manager ? t('branches') : t('yourLocations')),
         manager ? tile(`#/shop/${shopId}/team`, 'team', t('team')) : null,
       ),

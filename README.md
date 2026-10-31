@@ -22,6 +22,8 @@ Live: https://wissa-azmy.github.io/dokan/
 | `screens.js` | Header, shop list, new shop, shop home, preferences |
 | `locations.js` | Branches and warehouses |
 | `team.js` | Members, roles, invites, joining with a code or link |
+| `categories.js` | Categories and subcategories, markup overrides |
+| `products.js` | Product list with search and filters, product form |
 | `app.js` | Start-up, listeners, hash routing, offline banner |
 | `firestore.rules` | Security rules |
 | `RULES-CHECKLIST.md` | What to try to check the rules |

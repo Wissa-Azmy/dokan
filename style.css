@@ -207,6 +207,23 @@ h1, h2 { margin: 0; line-height: 1.3; }
 .code-input { font-family: ui-monospace, 'SF Mono', Menlo, monospace; letter-spacing: 0.12em; text-transform: uppercase; }
 .note { margin: 0; padding: 10px 12px; border-radius: 10px; background: #fbefd9; color: #6b4a0e; font-size: 15px; }
 
+/* Products and categories */
+.filters { display: grid; grid-template-columns: 1fr; gap: 8px; position: sticky; top: 76px; z-index: 3; padding: 6px 0; background: var(--paper); }
+@media (min-width: 520px) { .filters { grid-template-columns: 1.6fr 1fr; } }
+.search-box { position: relative; display: block; }
+.search-box .icon { position: absolute; inset-inline-start: 14px; top: 14px; color: var(--muted); pointer-events: none; }
+.search-box .input { padding-inline-start: 44px; }
+.search-box .input::-webkit-search-cancel-button { -webkit-appearance: none; }
+.price { font-weight: 800; color: var(--terracotta-dark); font-variant-numeric: tabular-nums; }
+.group { display: grid; gap: 6px; }
+.row.sub { margin-inline-start: 26px; padding: 10px 12px; box-shadow: none; }
+.row.sub .row-icon { width: 32px; height: 32px; }
+a.icon-btn { text-decoration: none; }
+.fab { position: sticky; bottom: calc(14px + env(safe-area-inset-bottom)); box-shadow: 0 8px 20px rgba(143, 61, 33, 0.3); }
+.sticky-actions { position: sticky; bottom: 0; padding: 12px 0 calc(12px + env(safe-area-inset-bottom)); background: linear-gradient(transparent, var(--paper) 30%); }
+.sticky-actions .danger-text { margin-inline-end: auto; }
+.form .section-title { margin: 0; }
+
 /* Toasts and offline banner */
 .toasts { position: fixed; inset-inline: 0; bottom: calc(16px + env(safe-area-inset-bottom)); display: grid; justify-items: center; gap: 8px; pointer-events: none; z-index: 50; }
 .toast { background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 12px; max-width: calc(100vw - 32px); box-shadow: var(--shadow); transition: opacity 0.3s, transform 0.3s; }

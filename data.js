@@ -164,3 +164,48 @@ export function updateMember(shopId, uid, patch) {
 export function removeMember(shopId, uid) {
   return deleteDoc(doc(db, 'shops', shopId, 'members', uid));
 }
+
+// ---------- Categories and products ----------
+// Saves work offline too: the returned promise resolves when the server confirms.
+
+export function saveCategory(shopId, id, { nameAr, nameEn, parentId, markupPct }) {
+  const data = { nameAr, nameEn, parentId: parentId || null, markupPct: markupPct ?? null, updatedAt: serverTimestamp() };
+  if (id) return updateDoc(doc(db, 'shops', shopId, 'categories', id), data);
+  return setDoc(doc(collection(db, 'shops', shopId, 'categories')), { ...data, createdAt: serverTimestamp() });
+}
+
+export function deleteCategory(shopId, id) {
+  return deleteDoc(doc(db, 'shops', shopId, 'categories', id));
+}
+
+export const UNITS = ['piece', 'box', 'pack', 'carton', 'dozen', 'bag', 'bottle', 'kg', 'g', 'l', 'ml', 'm'];
+
+// Returns { id, done } so the screen can move on without waiting for the server.
+export function saveProduct(shopId, id, p) {
+  const data = {
+    nameAr: p.nameAr,
+    nameEn: p.nameEn,
+    categoryId: p.categoryId || null,
+    brand: p.brand || '',
+    barcode: p.barcode || '',
+    sku: p.sku || '',
+    unit: p.unit,
+    price: p.price ?? null,
+    markupPct: p.markupPct ?? null,
+    lowStock: p.lowStock || {},
+    active: p.active !== false,
+    updatedAt: serverTimestamp(),
+  };
+  if (id) return { id, done: updateDoc(doc(db, 'shops', shopId, 'products', id), data) };
+  const ref = doc(collection(db, 'shops', shopId, 'products'));
+  return { id: ref.id, done: setDoc(ref, { ...data, createdAt: serverTimestamp() }) };
+}
+
+export function setProductActive(shopId, id, active) {
+  return updateDoc(doc(db, 'shops', shopId, 'products', id), { active, updatedAt: serverTimestamp() });
+}
+
+// Later steps block this when the product has stock or history.
+export function deleteProduct(shopId, id) {
+  return deleteDoc(doc(db, 'shops', shopId, 'products', id));
+}

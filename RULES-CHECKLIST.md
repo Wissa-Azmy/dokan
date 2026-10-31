@@ -49,3 +49,10 @@ You can test by hand in the app, or in the Firebase console under *Firestore →
 - ⛔ C adds or edits a location.
 - ⛔ B deletes a location (only the owner can).
 - ✅ A deletes a location after typing the confirmation word.
+
+## Categories and products (step 3)
+- ✅ A and B add, edit and delete categories, subcategories and products.
+- ✅ C (employee) sees the product list and prices.
+- ⛔ C adds, edits or deletes a product or category. In the app C has no add or edit buttons; in the Playground, try a `create` on `shops/{id}/products/x` as C.
+- ⛔ D reads `shops/{id}/products`.
+- ⛔ A saves a product with an empty Arabic name, a negative price or a markup over 1000 (Playground). The app blocks these first.

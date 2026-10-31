@@ -19,6 +19,8 @@ async function start() {
   const screens = await import('./screens.js');
   const { renderLocations } = await import('./locations.js');
   const { renderTeam, renderJoin } = await import('./team.js');
+  const { renderCategories } = await import('./categories.js');
+  const { renderProducts, renderProductForm } = await import('./products.js');
 
   // Listeners opened by screens for the shop being viewed; closed when leaving that shop.
   const live = new Map();
@@ -126,14 +128,21 @@ async function start() {
 
   const parseRoute = () => (location.hash || '#/shops').split('/').slice(1);
   const FORM_ROUTES = ['new-shop', 'prefs', 'join'];
+  const FORM_SUBS = ['product'];
+  let formReady = false; // a shop form screen is drawn with all its data
 
   // Live data updates redraw list screens only, so forms being typed into are never reset.
+  // A shop form still waiting for its data is redrawn until it's ready.
   function refresh() {
-    if (!FORM_ROUTES.includes(parseRoute()[0])) render();
+    const [route, , sub] = parseRoute();
+    if (FORM_ROUTES.includes(route)) return;
+    if (FORM_SUBS.includes(sub) && formReady) return;
+    render();
   }
 
   function render() {
-    const [route, id, sub] = parseRoute();
+    const [route, id, sub, subId] = parseRoute();
+    formReady = false;
     if (!ctx.user) {
       // Keep an invite link through sign-in or sign-up.
       if (route === 'join' && id) sessionStorage.setItem('dokan.pendingInvite', id);
@@ -153,6 +162,12 @@ async function start() {
       const usable = me && !me.disabled;
       if (usable && sub === 'locations') return renderLocations(root, ctx, id);
       if (usable && sub === 'team') return renderTeam(root, ctx, id);
+      if (usable && sub === 'products') return renderProducts(root, ctx, id);
+      if (usable && sub === 'categories') return renderCategories(root, ctx, id);
+      if (usable && sub === 'product' && subId && ['owner', 'manager'].includes(me.role)) {
+        formReady = renderProductForm(root, ctx, id, subId);
+        return;
+      }
       return screens.renderShopHome(root, id);
     }
     return screens.renderShops(root);

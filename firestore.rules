@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// Dokan rules — step 2: profiles, shops, members and roles, invites, locations.
+// Dokan rules — step 3: profiles, shops, members and roles, invites, locations, categories, products.
 // Every shop's data lives under shops/{shopId}; access needs an active member document there.
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -128,7 +128,40 @@ service cloud.firestore {
         allow update: if isManager(shopId);
         allow delete: if isOwner(shopId);
       }
+
+      // Everyone in the shop reads the catalogue; owners and managers change it.
+      match /categories/{catId} {
+        allow read: if isMember(shopId);
+        allow create, update: if isManager(shopId) && validCategory(request.resource.data);
+        allow delete: if isManager(shopId);
+      }
+
+      match /products/{productId} {
+        allow read: if isMember(shopId);
+        allow create, update: if isManager(shopId) && validProduct(request.resource.data);
+        allow delete: if isManager(shopId);
+      }
       // Collections not listed here are closed by default.
+    }
+
+    function optionalPct(v) { return v == null || (v is number && v >= 0 && v <= 1000); }
+
+    function validCategory(d) {
+      return d.nameAr is string && d.nameAr.size() > 0
+        && d.nameEn is string
+        && (d.get('parentId', null) == null || d.parentId is string)
+        && optionalPct(d.get('markupPct', null));
+    }
+
+    function validProduct(d) {
+      return d.nameAr is string && d.nameAr.size() > 0 && d.nameAr.size() <= 200
+        && d.nameEn is string && d.nameEn.size() <= 200
+        && (d.get('categoryId', null) == null || d.categoryId is string)
+        && d.unit is string
+        && (d.get('price', null) == null || (d.price is number && d.price >= 0))
+        && optionalPct(d.get('markupPct', null))
+        && d.lowStock is map
+        && d.active is bool;
     }
   }
 }

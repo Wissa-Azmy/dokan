@@ -58,3 +58,23 @@ export function digitsOf(text) {
   const s = String(text ?? '');
   return digits === 'arab' ? s.replace(/\d/g, (d) => String.fromCharCode(0x0660 + Number(d))) : s;
 }
+
+// For search: lower case, Western digits, no Arabic diacritics, and common letter variants unified.
+export function normalize(text) {
+  return String(text ?? '')
+    .toLowerCase()
+    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[\u064B-\u0652\u0640]/g, '')
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Reads an optional non-negative number field: '' → null, invalid → NaN.
+export function optionalNum(value) {
+  if (String(value ?? '').trim() === '') return null;
+  const n = parseNum(value);
+  return Number.isNaN(n) || n < 0 ? NaN : n;
+}
