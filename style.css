@@ -18,6 +18,8 @@
 }
 
 * { box-sizing: border-box; }
+/* Hidden always wins over display rules like .form { display: grid }. */
+[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
