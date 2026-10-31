@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// Dokan rules — step 3: profiles, shops, members and roles, invites, locations, categories, products.
+// Dokan rules — step 4: profiles, shops, members and roles, invites, locations, catalogue, stock.
 // Every shop's data lives under shops/{shopId}; access needs an active member document there.
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -141,7 +141,61 @@ service cloud.firestore {
         allow create, update: if isManager(shopId) && validProduct(request.resource.data);
         allow delete: if isManager(shopId);
       }
+
+      // Stock quantities per location: { qty: { locationId: n } }. The app always changes them in the
+      // same batch as a movement; the rules allow only the locations the member may use. Never deleted.
+      match /stock/{productId} {
+        allow read: if isMember(shopId);
+        allow create: if isManager(shopId) && validStock(request.resource.data)
+          && inMyLocations(shopId, request.resource.data.qty.keys());
+        allow update: if isManager(shopId) && validStock(request.resource.data)
+          && inMyLocations(shopId, request.resource.data.qty.diff(resource.data.get('qty', {})).affectedKeys());
+        allow delete: if false;
+      }
+
+      // Movements are the stock history: created once, never changed or deleted.
+      match /movements/{moveId} {
+        allow read: if isMember(shopId);
+        allow create: if isManager(shopId) && validMove(shopId, request.resource.data);
+        allow update, delete: if false;
+      }
+
+      match /stockCounts/{countId} {
+        allow read: if isManager(shopId);
+        allow create: if isManager(shopId)
+          && request.resource.data.status == 'open'
+          && request.resource.data.createdBy == request.auth.uid
+          && inMyLocations(shopId, [request.resource.data.locationId]);
+        allow update: if isManager(shopId)
+          && inMyLocations(shopId, [resource.data.locationId])
+          && resource.data.status == 'open'
+          && request.resource.data.locationId == resource.data.locationId;
+        allow delete: if isManager(shopId) && inMyLocations(shopId, [resource.data.locationId]);
+      }
       // Collections not listed here are closed by default.
+    }
+
+    // Owners, and managers without a location list, may use every location.
+    function seesAllLocations(shopId) {
+      let m = member(shopId);
+      return m.role == 'owner' || (m.role == 'manager' && m.branchIds.size() == 0);
+    }
+    function inMyLocations(shopId, ids) {
+      return seesAllLocations(shopId) || ids.hasOnly(member(shopId).branchIds);
+    }
+
+    function validStock(d) {
+      return d.keys().hasOnly(['qty', 'updatedAt']) && d.qty is map;
+    }
+
+    function validMove(shopId, d) {
+      return d.by == request.auth.uid
+        && d.type in ['adjust', 'transfer', 'count']
+        && d.productId is string
+        && d.qty is number && d.qty > 0
+        && d.locations is list && d.locations.size() > 0 && d.locations.size() <= 2
+        && d.at == request.time
+        && inMyLocations(shopId, d.locations);
     }
 
     function optionalPct(v) { return v == null || (v is number && v >= 0 && v <= 1000); }

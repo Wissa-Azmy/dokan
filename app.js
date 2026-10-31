@@ -21,6 +21,8 @@ async function start() {
   const { renderTeam, renderJoin } = await import('./team.js');
   const { renderCategories } = await import('./categories.js');
   const { renderProducts, renderProductForm } = await import('./products.js');
+  const { renderStock } = await import('./stock.js');
+  const { renderCount } = await import('./count.js');
 
   // Listeners opened by screens for the shop being viewed; closed when leaving that shop.
   const live = new Map();
@@ -164,6 +166,8 @@ async function start() {
       if (usable && sub === 'team') return renderTeam(root, ctx, id);
       if (usable && sub === 'products') return renderProducts(root, ctx, id);
       if (usable && sub === 'categories') return renderCategories(root, ctx, id);
+      if (usable && sub === 'stock') return renderStock(root, ctx, id);
+      if (usable && sub === 'count' && ['owner', 'manager'].includes(me.role)) return renderCount(root, ctx, id);
       if (usable && sub === 'product' && subId && ['owner', 'manager'].includes(me.role)) {
         formReady = renderProductForm(root, ctx, id, subId);
         return;

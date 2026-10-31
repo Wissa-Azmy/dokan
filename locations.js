@@ -6,6 +6,7 @@ import { addLocation, updateLocation, deleteLocation } from './data.js';
 import { watchCollection } from './sync.js';
 import { isManager, isOwner, canUseLocation } from './roles.js';
 import { header } from './screens.js';
+import { hasHistory } from './movements.js';
 
 // Live list of a shop's locations, branches first then by code.
 export function useLocations(ctx, shopId) {
@@ -118,6 +119,12 @@ function editDialog(shopId, locations, loc) {
 async function remove(shopId, locations, loc) {
   if (loc.type === 'branch' && loc.active !== false && !activeBranches(locations, loc.id).length) {
     return toast(t('lastBranch'), 'error');
+  }
+  // Locations with stock history are kept; they can only be turned off.
+  try {
+    if (await hasHistory(shopId, { locationId: loc.id })) return toast(t('hasHistoryLocation'), 'error');
+  } catch {
+    return toast(t('needOnline'), 'error');
   }
   const word = t('deleteWord');
   const yes = await confirmAction({

@@ -10,6 +10,7 @@ import { isManager } from './roles.js';
 import { header } from './screens.js';
 import { useCategories, categoryPath, categoryOptions } from './categories.js';
 import { useLocations } from './locations.js';
+import { hasHistory } from './movements.js';
 
 const MAX_ROWS = 100;
 const ARCHIVED = '__archived';
@@ -127,6 +128,12 @@ function productRow(shopId, p, categories, canEdit) {
 }
 
 async function remove(shopId, p, after) {
+  // Products with stock history are kept; they can only be made inactive.
+  try {
+    if (await hasHistory(shopId, { productId: p.id })) return toast(t('hasHistoryProduct'), 'error');
+  } catch {
+    return toast(t('needOnline'), 'error');
+  }
   const word = t('deleteWord');
   const yes = await confirmAction({
     title: t('deleteProduct'),

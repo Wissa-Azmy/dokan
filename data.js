@@ -65,7 +65,7 @@ export function updateLocation(shopId, id, patch) {
   return updateDoc(doc(db, 'shops', shopId, 'locations', id), { ...patch, updatedAt: serverTimestamp() });
 }
 
-// Later steps block this when the location has stock or history.
+// Only called after movements.hasHistory() confirmed the location has none.
 export function deleteLocation(shopId, id) {
   return deleteDoc(doc(db, 'shops', shopId, 'locations', id));
 }
@@ -205,7 +205,7 @@ export function setProductActive(shopId, id, active) {
   return updateDoc(doc(db, 'shops', shopId, 'products', id), { active, updatedAt: serverTimestamp() });
 }
 
-// Later steps block this when the product has stock or history.
+// Only called after movements.hasHistory() confirmed the product has none.
 export function deleteProduct(shopId, id) {
   return deleteDoc(doc(db, 'shops', shopId, 'products', id));
 }

@@ -56,3 +56,14 @@ You can test by hand in the app, or in the Firebase console under *Firestore →
 - ⛔ C adds, edits or deletes a product or category. In the app C has no add or edit buttons; in the Playground, try a `create` on `shops/{id}/products/x` as C.
 - ⛔ D reads `shops/{id}/products`.
 - ⛔ A saves a product with an empty Arabic name, a negative price or a markup over 1000 (Playground). The app blocks these first.
+
+## Stock (step 4)
+Set up: B is a manager limited to Branch 1; C is an employee.
+- ✅ A adjusts and transfers stock at any location; A runs a stock count.
+- ✅ B adjusts stock at Branch 1 and counts Branch 1.
+- ⛔ B adjusts stock at Branch 2, or transfers from Branch 1 to Branch 2 (Branch 2 is outside B's list). In the app B doesn't see Branch 2; in the Playground, `update` `stock/{productId}` changing `qty.{branch2Id}` as B.
+- ✅ C sees stock quantities. ⛔ C adjusts, transfers or counts (for now; selling and receiving come in later steps).
+- ⛔ Anyone edits or deletes a document in `movements`.
+- ⛔ Anyone deletes a `stock` document.
+- ⛔ Anyone creates a movement with `by` set to someone else's UID.
+- ✅ Two phones adjust the same product at the same moment (e.g. +5 and −2). The result is exactly +3; neither change is lost.

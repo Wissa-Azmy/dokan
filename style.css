@@ -224,6 +224,37 @@ a.icon-btn { text-decoration: none; }
 .sticky-actions .danger-text { margin-inline-end: auto; }
 .form .section-title { margin: 0; }
 
+/* Stock */
+.row.tap { width: 100%; font: inherit; color: inherit; text-align: start; cursor: pointer; }
+.row.tap:active { transform: scale(0.99); }
+.row.is-low { border-inline-start: 4px solid var(--mustard); }
+.badge.low { background: #f9e7c2; color: #7a5410; }
+.qty { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; flex: none; }
+.qty.small { font-size: 16px; }
+.neg { color: var(--danger); }
+.pos { color: var(--ok); }
+.check.inline { padding: 4px 2px; }
+@media (min-width: 520px) { .filters .check.inline { grid-column: 1 / -1; } }
+.qty-table { display: grid; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.qty-line { display: flex; justify-content: space-between; gap: 10px; padding: 10px 12px; }
+.qty-line + .qty-line { border-top: 1px solid var(--line); }
+.qty-line.is-low { background: #fdf3df; }
+.history { display: grid; gap: 2px; }
+.history-line { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.history-main { display: grid; gap: 2px; min-width: 0; }
+h3.section-title { font-size: 15px; margin: 4px 0 0; }
+
+/* Stock count */
+.results { display: grid; gap: 4px; }
+.results:empty { display: none; }
+.result { display: flex; justify-content: space-between; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; font: inherit; color: inherit; text-align: start; cursor: pointer; }
+.count-row { gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.count-input { width: 96px; flex: none; text-align: center; }
+.diff-table { display: grid; font-size: 15px; max-height: 50vh; overflow: auto; }
+.diff-line { display: grid; grid-template-columns: 1fr 64px 64px 64px; gap: 6px; padding: 8px 0; border-bottom: 1px solid var(--line); align-items: center; }
+.diff-line > :not(:first-child) { text-align: end; font-variant-numeric: tabular-nums; }
+.diff-line.head { font-size: 13px; color: var(--muted); font-weight: 700; }
+
 /* Toasts and offline banner */
 .toasts { position: fixed; inset-inline: 0; bottom: calc(16px + env(safe-area-inset-bottom)); display: grid; justify-items: center; gap: 8px; pointer-events: none; z-index: 50; }
 .toast { background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 12px; max-width: calc(100vw - 32px); box-shadow: var(--shadow); transition: opacity 0.3s, transform 0.3s; }

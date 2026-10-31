@@ -24,8 +24,12 @@ Live: https://wissa-azmy.github.io/dokan/
 | `team.js` | Members, roles, invites, joining with a code or link |
 | `categories.js` | Categories and subcategories, markup overrides |
 | `products.js` | Product list with search and filters, product form |
+| `movements.js` | Every stock change: movement + atomic increment in one batch; history; stock counts |
+| `stock.js` | Stock per location, low-stock warnings, adjustments, transfers |
+| `count.js` | Shelf-by-shelf stock count and its review |
 | `app.js` | Start-up, listeners, hash routing, offline banner |
 | `firestore.rules` | Security rules |
+| `firestore.indexes.json` | Composite indexes (same as the console step below) |
 | `RULES-CHECKLIST.md` | What to try to check the rules |
 | `firebase.json` | For the Firebase CLI / emulator (optional) |
 
@@ -38,6 +42,12 @@ Live: https://wissa-azmy.github.io/dokan/
 5. **Create Firestore.** *Build → Firestore Database → Create database →* choose **Standard edition** if asked → Database ID: keep `(default)` (the free quota only applies to the default database) → Location: pick one close to Egypt, for example `europe-west1 (Belgium)` or `eur3 (Europe)`. **The location can't be changed later.** → Start in **production mode** → *Create*.
 6. **Publish the rules.** *Firestore Database → Rules* tab → delete everything there → paste the whole content of `firestore.rules` → *Publish*. Do this again every time `firestore.rules` changes.
 7. *(Recommended)* **Restrict the API key.** Google Cloud console → *APIs & Services → Credentials →* the "Browser key (auto created by Firebase)" → *Application restrictions: Websites* → add `https://wissa-azmy.github.io/*` and `http://localhost/*` → *Save*. It can take a few minutes to apply.
+8. **Add the movement history index.** *Firestore Database → Indexes → Composite → Create index*:
+   - Collection ID: `movements`
+   - Field 1: `productId` · Ascending
+   - Field 2: `at` · Descending
+   - Query scope: *Collection*
+   → *Create*. It takes a few minutes to build; until then a product's "Recent movements" shows an index message. Stock itself works without it.
 
 ## Free plan limits (Spark)
 
