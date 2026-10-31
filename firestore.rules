@@ -1,0 +1,71 @@
+rules_version = '2';
+
+// Dokan — step 1 rules: profiles, shop creation, membership and locations.
+// Every shop's data lives under shops/{shopId}; access needs an active member document there.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isMe(uid) { return signedIn() && request.auth.uid == uid; }
+
+    function shopPath(shopId) { return /databases/$(database)/documents/shops/$(shopId); }
+    function memberPath(shopId) { return /databases/$(database)/documents/shops/$(shopId)/members/$(request.auth.uid); }
+    function member(shopId) { return get(memberPath(shopId)).data; }
+
+    function isMember(shopId) {
+      return signedIn() && exists(memberPath(shopId)) && member(shopId).disabled != true;
+    }
+    function hasRole(shopId, roles) { return isMember(shopId) && member(shopId).role in roles; }
+    function isOwner(shopId) { return hasRole(shopId, ['owner']); }
+    function isManager(shopId) { return hasRole(shopId, ['owner', 'manager']); }
+
+    // True while the shop is being created in this same batch by the current user.
+    function creatingShop(shopId) {
+      return signedIn()
+        && !exists(shopPath(shopId))
+        && getAfter(shopPath(shopId)).data.ownerId == request.auth.uid;
+    }
+
+    // ---------- User profiles ----------
+    match /users/{uid} {
+      allow read: if isMe(uid);
+      allow create: if isMe(uid)
+        && request.resource.data.keys().hasOnly(['name', 'email', 'lang', 'digits', 'shopIds', 'lastShopId', 'createdAt', 'updatedAt'])
+        && request.resource.data.shopIds is list;
+      allow update: if isMe(uid)
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['name', 'lang', 'digits', 'shopIds', 'lastShopId', 'updatedAt']);
+      allow delete: if false;
+    }
+
+    // ---------- Shops ----------
+    match /shops/{shopId} {
+      allow read: if isMember(shopId);
+      allow create: if signedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && getAfter(memberPath(shopId)).data.role == 'owner';
+      allow update: if isOwner(shopId)
+        && request.resource.data.ownerId == resource.data.ownerId;
+      allow delete: if isOwner(shopId);
+
+      match /members/{uid} {
+        allow read: if isMe(uid) || isManager(shopId);
+        // The first member is the owner, created together with the shop.
+        allow create: if isMe(uid)
+          && creatingShop(shopId)
+          && request.resource.data.role == 'owner'
+          && request.resource.data.disabled == false;
+        // Owners manage others; nobody edits or removes their own membership here.
+        allow update, delete: if isOwner(shopId) && uid != request.auth.uid;
+      }
+
+      match /locations/{locId} {
+        allow read: if isMember(shopId);
+        allow create: if isManager(shopId) || creatingShop(shopId);
+        allow update: if isManager(shopId);
+        allow delete: if isOwner(shopId);
+      }
+      // Collections not listed here are closed by default.
+    }
+  }
+}

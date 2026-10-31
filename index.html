@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#b5502e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dokan">
+  <title>دكان · Dokan</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23b5502e'/%3E%3Cpath d='M6 11v7h12v-7M5 11l1.5-4h11L19 11M10.5 18v-3.5h3V18' fill='none' stroke='%23fbf5ea' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script>
+    // Set language and direction before first paint to avoid a flash.
+    (function () {
+      var l = localStorage.getItem('dokan.lang') || 'ar';
+      document.documentElement.lang = l;
+      document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
+    })();
+  </script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <div id="offline" class="offline" hidden></div>
+  <div id="app"></div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <noscript>Dokan needs JavaScript.</noscript>
+</body>
+</html>

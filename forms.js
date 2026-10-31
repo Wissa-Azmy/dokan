@@ -1,0 +1,132 @@
+// Phone-friendly building blocks: elements, icons, fields, dialogs, confirmations and toasts.
+import { t } from './i18n.js';
+
+export function el(tag, attrs = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') node.className = v;
+    else if (k.startsWith('on') && typeof v === 'function') node.addEventListener(k.slice(2), v);
+    else if (k === 'html') node.innerHTML = v;
+    else node.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of children.flat()) {
+    if (c == null || c === false) continue;
+    node.append(c instanceof Node ? c : document.createTextNode(String(c)));
+  }
+  return node;
+}
+
+const paths = {
+  edit: '<path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/>',
+  trash: '<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  close: '<path d="M6 6l12 12M18 6L6 18"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/>',
+  logout: '<path d="M15 4h4v16h-4"/><path d="M10 8l-4 4 4 4M6 12h10"/>',
+  store: '<path d="M4 10v10h16V10"/><path d="M3 10l2-6h14l2 6"/><path d="M3 10c0 1.7 1.3 3 3 3s3-1.3 3-3c0 1.7 1.3 3 3 3s3-1.3 3-3c0 1.7 1.3 3 3 3s3-1.3 3-3"/><path d="M10 20v-5h4v5"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/>',
+  back: '<path d="M15 5l-7 7 7 7"/>',
+  key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3"/>',
+};
+
+export function icon(name) {
+  const span = el('span', { class: 'icon', 'aria-hidden': 'true' });
+  span.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths[name] || ''}</svg>`;
+  return span;
+}
+
+export function iconButton(name, label, onclick, extra = '') {
+  return el('button', { type: 'button', class: `icon-btn ${extra}`.trim(), 'aria-label': label, title: label, onclick }, icon(name));
+}
+
+export const isTouch = () => matchMedia('(pointer: coarse)').matches;
+
+// Focus only on desktop, never date fields.
+export function focusFirst(container) {
+  if (isTouch()) return;
+  const first = container.querySelector('input:not([type=date]):not([type=hidden]), select, textarea');
+  first?.focus();
+}
+
+function wrap(label, control, hint) {
+  return el('label', { class: 'field' }, el('span', { class: 'field-label' }, label), control, hint ? el('span', { class: 'field-hint' }, hint) : null, el('span', { class: 'field-error', role: 'alert' }));
+}
+
+export function textField({ name, label, value = '', type = 'text', required, hint, autocomplete, dir }) {
+  const input = el('input', { name, type, value, required, autocomplete, dir, class: 'input' });
+  return wrap(label, input, hint);
+}
+
+// Numbers are text fields with a decimal keypad, so "6,5" and "6.5" both work.
+export function numberField({ name, label, value = '', required, hint }) {
+  const input = el('input', { name, type: 'text', inputmode: 'decimal', value, required, autocomplete: 'off', class: 'input num' });
+  return wrap(label, input, hint);
+}
+
+export function selectField({ name, label, value, options, hint }) {
+  const select = el('select', { name, class: 'input select' }, options.map((o) => el('option', { value: o.value, selected: String(o.value) === String(value) }, o.label)));
+  return wrap(label, el('span', { class: 'select-wrap' }, select), hint);
+}
+
+export function dateField({ name, label, value, hint }) {
+  return wrap(label, el('input', { name, type: 'date', value, class: 'input date' }), hint);
+}
+
+export function setFieldError(form, name, message) {
+  const input = form.elements[name];
+  const box = input?.closest('.field')?.querySelector('.field-error');
+  if (box) box.textContent = message || '';
+  input?.classList.toggle('invalid', !!message);
+}
+
+// Create the dialog element first, attach it, then fill it.
+export function openDialog(title, build) {
+  const dialog = el('dialog', { class: 'dialog' });
+  document.body.append(dialog);
+  const close = () => dialog.close();
+  dialog.addEventListener('close', () => dialog.remove());
+  const body = el('div', { class: 'dialog-body' });
+  dialog.append(el('header', { class: 'dialog-head' }, el('h2', {}, title), iconButton('close', t('cancel'), close)), body);
+  build(body, close);
+  dialog.showModal();
+  focusFirst(body);
+  return { dialog, close };
+}
+
+// Resolves true if confirmed. With typeWord, the user must type that word to enable the button.
+export function confirmAction({ title, message, confirmLabel = t('confirm'), danger = false, typeWord }) {
+  return new Promise((resolve) => {
+    let answered = false;
+    const { dialog } = openDialog(title, (body, close) => {
+      body.append(el('p', { class: 'confirm-text' }, message));
+      const ok = el('button', { type: 'button', class: danger ? 'btn danger' : 'btn primary', disabled: !!typeWord, onclick: () => { answered = true; resolve(true); close(); } }, confirmLabel);
+      if (typeWord) {
+        const input = el('input', { class: 'input', autocomplete: 'off', placeholder: typeWord, oninput: (e) => { ok.disabled = e.target.value.trim() !== typeWord; } });
+        body.append(input);
+      }
+      body.append(el('div', { class: 'actions' }, el('button', { type: 'button', class: 'btn ghost', onclick: close }, t('cancel')), ok));
+    });
+    dialog.addEventListener('close', () => { if (!answered) resolve(false); });
+  });
+}
+
+export function toast(message, kind = 'ok') {
+  const box = document.getElementById('toasts');
+  const item = el('div', { class: `toast ${kind}`, role: 'status' }, message);
+  box.append(item);
+  setTimeout(() => item.classList.add('out'), 2600);
+  setTimeout(() => item.remove(), 3000);
+}
+
+// Disable the submit button while an async action runs.
+export async function busy(button, fn) {
+  button.disabled = true;
+  button.classList.add('busy');
+  try {
+    return await fn();
+  } finally {
+    button.disabled = false;
+    button.classList.remove('busy');
+  }
+}
