@@ -260,11 +260,14 @@ export function t(key, vars = {}) {
   return s.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
 }
 
-// Friendly text for Firebase errors.
+// Friendly text for Firebase errors. Unknown errors keep their code or message so they can be reported.
 export function errorText(err) {
   const code = err?.code || '';
   if (code === 'auth/wrong-password' || code === 'auth/user-not-found') return t('auth/invalid-credential');
-  return dict[lang][code] ? t(code) : t('errGeneric');
+  if (dict[lang][code]) return t(code);
+  console.error(err);
+  const detail = code || err?.message || String(err || '');
+  return detail ? `${t('errGeneric')} (${detail})` : t('errGeneric');
 }
 
 // Pick the name in the current language, falling back to the other one.
