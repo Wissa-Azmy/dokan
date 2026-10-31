@@ -4,6 +4,7 @@ import { setDigits, getDigits, digitsOf } from './format.js';
 import { el, icon, iconButton, textField, selectField, setFieldError, focusFirst, busy, toast } from './forms.js';
 import { createShop } from './data.js';
 import { saveProfileField } from './sync.js';
+import { roleLabel } from './roles.js';
 import { auth, signOut } from './firebase.js';
 
 let ctx = null; // { user, profile, shops: Map, go(path) }
@@ -30,7 +31,7 @@ export function langSwitch(rerender) {
   }, icon('globe'), next === 'ar' ? 'عربي' : 'English');
 }
 
-const roleLabel = (r) => t(r === 'owner' ? 'roleOwner' : r === 'manager' ? 'roleManager' : 'roleEmployee');
+const tile = (href, iconName, label) => el('a', { class: 'card tile', href }, el('span', { class: 'tile-icon' }, icon(iconName)), el('span', { class: 'tile-label' }, label), el('span', { class: 'tile-go flip' }, icon('chevron')));
 
 export function header(title, { back } = {}) {
   return el('header', { class: 'topbar' },
@@ -54,8 +55,8 @@ export function renderShops(root) {
       el('a', { class: 'card shop-card', href: `#/shop/${id}` },
         el('span', { class: 'shop-icon' }, icon('store')),
         el('span', { class: 'shop-text' },
-          el('strong', {}, shop ? localName(shop) : t('loading')),
-          member ? el('span', { class: `badge role-${member.role}` }, roleLabel(member.role)) : null,
+          el('strong', {}, shop ? localName(shop) : member?.disabled ? t('memberDisabled') : t('loading')),
+          member ? el('span', { class: `badge role-${member.role}` }, member.disabled ? t('memberDisabled') : roleLabel(member.role)) : null,
         ),
       ),
     );
@@ -66,7 +67,7 @@ export function renderShops(root) {
       list,
       el('div', { class: 'actions stack' },
         el('a', { class: 'btn primary', href: '#/new-shop' }, icon('plus'), t('createShop')),
-        el('button', { type: 'button', class: 'btn ghost', onclick: () => toast(t('joinSoon')) }, icon('key'), t('joinShop')),
+        el('button', { type: 'button', class: 'btn ghost', onclick: () => ctx.go('#/join') }, icon('key'), t('joinShop')),
       ),
     ),
   );
@@ -102,13 +103,19 @@ export function renderNewShop(root) {
 export function renderShopHome(root, shopId) {
   const shop = ctx.shops.get(shopId);
   const member = ctx.members.get(shopId);
+  const disabled = member?.disabled === true;
+  const manager = !disabled && (member?.role === 'owner' || member?.role === 'manager');
   root.replaceChildren(
     header(shop ? localName(shop) : t('loading'), { back: '#/shops' }),
     el('main', { class: 'page' },
       el('section', { class: 'card hero' },
         el('h2', {}, shop ? localName(shop) : ''),
         member ? el('span', { class: `badge role-${member.role}` }, roleLabel(member.role)) : null,
-        el('p', { class: 'muted' }, t('comingNext')),
+        el('p', { class: disabled ? 'form-error' : 'muted' }, disabled ? t('accessDisabled') : t('comingNext')),
+      ),
+      disabled || !member ? null : el('nav', { class: 'tiles' },
+        tile(`#/shop/${shopId}/locations`, 'store', manager ? t('branches') : t('yourLocations')),
+        manager ? tile(`#/shop/${shopId}/team`, 'team', t('team')) : null,
       ),
       el('a', { class: 'btn ghost', href: '#/shops' }, t('switchShop')),
     ),

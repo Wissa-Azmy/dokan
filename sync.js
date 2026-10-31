@@ -1,5 +1,5 @@
 // Live listeners and field-by-field saving. A signed-in device always takes the cloud's values.
-import { db, doc, onSnapshot, setDoc, updateDoc, serverTimestamp, arrayRemove } from './firebase.js';
+import { db, doc, collection, query, onSnapshot, setDoc, updateDoc, getDocFromServer, serverTimestamp, arrayRemove } from './firebase.js';
 import { getLang } from './i18n.js';
 import { getDigits } from './format.js';
 
@@ -43,18 +43,33 @@ export function saveShopSetting(shopId, key, value) {
   return updateDoc(doc(db, 'shops', shopId), { [`settings.${key}`]: value, updatedAt: serverTimestamp() });
 }
 
-// Watches a shop the user belongs to. If the server refuses (the user was removed),
-// the shop is dropped from the user's list.
+// Watches a shop the user belongs to. If the server refuses and the membership is really gone
+// (removed, not just disabled), the shop is dropped from the user's list.
 export function watchShop(uid, shopId, onData) {
   return onSnapshot(
     doc(db, 'shops', shopId),
     (snap) => onData(snap.exists() ? { id: snap.id, ...snap.data() } : null),
-    (err) => {
-      if (err.code === 'permission-denied') {
-        updateDoc(doc(db, 'users', uid), { shopIds: arrayRemove(shopId) }).catch(() => {});
-      }
+    async (err) => {
       onData(null);
+      if (err.code !== 'permission-denied') return;
+      try {
+        const m = await getDocFromServer(doc(db, 'shops', shopId, 'members', uid));
+        if (!m.exists()) await updateDoc(doc(db, 'users', uid), { shopIds: arrayRemove(shopId) });
+      } catch {
+        // Offline or no access: keep the shop in the list for now.
+      }
     },
+  );
+}
+
+// Watches a collection, e.g. watchCollection(['shops', id, 'locations'], set).
+// Calls onData with an array of { id, ...data }, or [] if access is refused.
+export function watchCollection(path, onData, ...constraints) {
+  const ref = collection(db, ...path);
+  return onSnapshot(
+    constraints.length ? query(ref, ...constraints) : ref,
+    (snap) => onData(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+    () => onData([]),
   );
 }
 

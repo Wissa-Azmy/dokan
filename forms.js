@@ -28,6 +28,11 @@ const paths = {
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/>',
   back: '<path d="M15 5l-7 7 7 7"/>',
   key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3"/>',
+  team: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><circle cx="17" cy="9" r="2.8"/><path d="M16 14.6c2.8-.2 5 1.6 5.6 4.9"/>',
+  pin: '<path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
+  share: '<path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-6"/>',
+  chevron: '<path d="M9 5l7 7-7 7"/>',
 };
 
 export function icon(name) {
@@ -71,6 +76,44 @@ export function selectField({ name, label, value, options, hint }) {
 
 export function dateField({ name, label, value, hint }) {
   return wrap(label, el('input', { name, type: 'date', value, class: 'input date' }), hint);
+}
+
+export function checkboxField({ name, label, checked, hint }) {
+  return el('label', { class: 'check' },
+    el('input', { type: 'checkbox', name, checked }),
+    el('span', { class: 'check-text' }, el('span', {}, label), hint ? el('span', { class: 'field-hint' }, hint) : null),
+  );
+}
+
+// A group of checkboxes sharing one name. Read with checkedValues(form, name).
+export function checkGroup({ name, label, options, values = [], hint }) {
+  return el('fieldset', { class: 'field check-group' },
+    el('legend', { class: 'field-label' }, label),
+    options.map((o) => el('label', { class: 'check' },
+      el('input', { type: 'checkbox', name, value: o.value, checked: values.includes(o.value) }),
+      el('span', { class: 'check-text' }, o.label),
+    )),
+    hint ? el('span', { class: 'field-hint' }, hint) : null,
+    el('span', { class: 'field-error', role: 'alert' }),
+  );
+}
+
+export function checkedValues(form, name) {
+  return [...form.querySelectorAll(`input[name="${name}"]:checked`)].map((i) => i.value);
+}
+
+export function setGroupError(form, name, message) {
+  const box = form.querySelector(`input[name="${name}"]`)?.closest('fieldset')?.querySelector('.field-error');
+  if (box) box.textContent = message || '';
+}
+
+export async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast(t('copied'));
+  } catch {
+    window.prompt('', text);
+  }
 }
 
 export function setFieldError(form, name, message) {

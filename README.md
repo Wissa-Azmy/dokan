@@ -16,14 +16,18 @@ Live: https://wissa-azmy.github.io/dokan/
 | `format.js` | Number parsing ("6,5", "6.5", ٦٫٥) and EGP/date formatting, digit style |
 | `forms.js` | Elements, SVG icons, fields, dialogs, confirmations, toasts |
 | `sync.js` | Live listeners; saves profile and settings field by field |
-| `data.js` | Batched writes (create shop) |
+| `data.js` | Batched writes: shop, locations, invites, joining, members |
+| `roles.js` | Role checks matching the rules (owner, manager, employee, allowed locations) |
 | `auth.js` | Sign in, sign up, password reset |
 | `screens.js` | Header, shop list, new shop, shop home, preferences |
+| `locations.js` | Branches and warehouses |
+| `team.js` | Members, roles, invites, joining with a code or link |
 | `app.js` | Start-up, listeners, hash routing, offline banner |
 | `firestore.rules` | Security rules |
+| `RULES-CHECKLIST.md` | What to try to check the rules |
 | `firebase.json` | For the Firebase CLI / emulator (optional) |
 
-## Firebase setup (one time) (Done)
+## Firebase setup (one time)
 
 1. **Create the project.** Go to https://console.firebase.google.com → *Create a project* → name it `dokan` → Google Analytics is optional (you can turn it off) → *Create project*.
 2. **Add a web app.** On the project overview, click the web icon `</>` → nickname `dokan-web` → leave *Firebase Hosting* unticked → *Register app*. Copy the `firebaseConfig` values shown into `config.js`, replacing every `PASTE_…` value. (You can find them again later under ⚙️ *Project settings → General → Your apps*.)

@@ -6,10 +6,12 @@ import { langSwitch, brand } from './screens.js';
 
 export function renderAuth(root, mode = 'signIn') {
   const isUp = mode === 'signUp';
+  const fromInvite = !!sessionStorage.getItem('dokan.pendingInvite');
   const submit = el('button', { type: 'submit', class: 'btn primary wide' }, isUp ? t('signUp') : t('signIn'));
   const form = el(
     'form',
     { class: 'card auth-card', novalidate: true },
+    fromInvite ? el('p', { class: 'note' }, t('signInToJoin')) : null,
     isUp ? textField({ name: 'name', label: t('yourName'), required: true, autocomplete: 'name' }) : null,
     textField({ name: 'email', label: t('email'), type: 'email', required: true, autocomplete: 'email', dir: 'ltr' }),
     textField({ name: 'password', label: t('password'), type: 'password', required: true, autocomplete: isUp ? 'new-password' : 'current-password', dir: 'ltr' }),
