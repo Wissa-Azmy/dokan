@@ -23,7 +23,7 @@ Live: https://wissa-azmy.github.io/dokan/
 | `firestore.rules` | Security rules |
 | `firebase.json` | For the Firebase CLI / emulator (optional) |
 
-## Firebase setup (one time)
+## Firebase setup (one time) (Done)
 
 1. **Create the project.** Go to https://console.firebase.google.com → *Create a project* → name it `dokan` → Google Analytics is optional (you can turn it off) → *Create project*.
 2. **Add a web app.** On the project overview, click the web icon `</>` → nickname `dokan-web` → leave *Firebase Hosting* unticked → *Register app*. Copy the `firebaseConfig` values shown into `config.js`, replacing every `PASTE_…` value. (You can find them again later under ⚙️ *Project settings → General → Your apps*.)
