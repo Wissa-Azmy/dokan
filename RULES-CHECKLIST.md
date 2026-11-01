@@ -81,3 +81,15 @@ Set up: B is a manager **without** "can see costs"; B2 is a manager **with** it;
 - ⛔ Anyone edits a purchase whose status is `costed`, or deletes any purchase.
 - ⛔ Anyone edits or deletes a supplier payment.
 - ✅ B (manager without costs) adds and edits suppliers, but sees no balances.
+
+## Selling (step 6)
+Set up: C is an employee at Branch 1 only.
+- ✅ C sells at Branch 1: the sale, the stock decrease, the day totals (`dailyStats`) and, on credit, the customer's balance all save.
+- ⛔ C sells at Branch 2 (Playground: create `sales/x` with `locationId` = Branch 2 as C).
+- ⛔ C reads a sale from Branch 2. In the app, C's sales list only offers Branch 1.
+- ⛔ A sale with `onCredit` > 0 and no `customerId`.
+- ⛔ Anyone edits or deletes a sale or a return.
+- ✅ C adds a customer and receives a customer payment at Branch 1.
+- ⛔ C records an opening balance (kind `charge`) for a customer; only managers can.
+- ✅ C returns items from a Branch 1 sale; stock goes back up.
+- ⛔ Anyone deletes a `dailyStats` document, or writes one whose ID doesn't match its location and date.

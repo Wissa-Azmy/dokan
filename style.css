@@ -282,6 +282,71 @@ input[readonly] { background: #f5efe5; color: var(--muted); }
 .seg-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .btn.seg.on { background: var(--teal); border-color: var(--teal); color: #fff; }
 
+/* Selling */
+.sell-btn { min-height: 64px; font-size: 20px; }
+.sell-btn .icon { width: 26px; height: 26px; }
+.sell-page { padding-bottom: 120px; }
+.sell-top { display: grid; gap: 8px; position: sticky; top: 76px; z-index: 3; padding: 6px 0; background: var(--paper); }
+.sell-search { display: flex; gap: 8px; align-items: flex-start; }
+.sell-search .picker { flex: 1; min-width: 0; }
+.icon-btn.big { width: 48px; height: 48px; background: var(--teal); border-color: var(--teal); color: #fff; }
+.cart { display: grid; gap: 8px; }
+.cart-line { display: grid; gap: 6px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; }
+.cart-line.short { border-inline-start: 4px solid var(--danger); }
+.cart-controls { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; }
+.stepper { display: flex; align-items: center; gap: 4px; }
+.stepper .icon-btn { width: 44px; height: 44px; font-size: 22px; font-weight: 700; }
+.qty-input { width: 64px; text-align: center; padding: 0 6px; }
+.price-input { min-width: 0; text-align: center; }
+.cart-bar {
+  position: fixed; inset-inline: 0; bottom: 0; z-index: 6;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+  background: var(--card); box-shadow: 0 -6px 18px rgba(60, 35, 15, 0.1);
+}
+.cart-sum { display: grid; flex: 1; }
+.cart-total { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--terracotta-dark); }
+.cart-bar .btn.primary { min-width: 130px; }
+.customer-row { align-items: center; }
+.pay-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: center; }
+.pay-row:has(> :nth-child(2):last-child) { grid-template-columns: 1fr 1fr; }
+.seg-group.three { grid-template-columns: repeat(3, 1fr); }
+.seg-group.three .btn { padding: 0 8px; font-size: 14px; }
+.sum-line.change strong { color: var(--ok); font-size: 18px; }
+.sum-line.credit strong { color: var(--danger); }
+.scan-box { width: 100%; min-height: 240px; border-radius: 12px; overflow: hidden; background: #000; }
+.scan-box video { width: 100% !important; height: auto !important; }
+.filters.two { grid-template-columns: 1fr 1fr; }
+.day-card { justify-items: start; }
+
+/* Receipt */
+.receipt-wrap { background: #fff; border: 1px dashed var(--line); border-radius: 12px; padding: 14px; max-width: 360px; margin: 0 auto; width: 100%; }
+.receipt { display: grid; gap: 10px; font-size: 14px; color: #000; }
+.r-head { display: grid; justify-items: center; gap: 2px; text-align: center; }
+.r-shop { font-size: 18px; }
+.r-lines { display: grid; gap: 6px; border-top: 1px dashed #999; border-bottom: 1px dashed #999; padding: 8px 0; }
+.r-line { display: grid; grid-template-columns: 1fr auto; gap: 0 8px; }
+.r-name { grid-column: 1 / -1; font-weight: 700; }
+.r-calc { color: #444; }
+.r-amt { text-align: end; font-variant-numeric: tabular-nums; }
+.r-totals { display: grid; gap: 4px; }
+.r-foot { text-align: center; margin: 0; }
+.receipt-actions { display: grid; gap: 8px; }
+.print-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#print-area { display: none; }
+
+@media print {
+  body > *:not(#print-area) { display: none !important; }
+  body { background: #fff; padding: 0; }
+  #print-area { display: block; margin: 0; }
+  #print-area.print-80 { width: 72mm; }
+  #print-area.print-58 { width: 48mm; }
+  #print-area .receipt { font-size: 11px; gap: 6px; }
+  #print-area.print-58 .receipt { font-size: 9.5px; }
+  #print-area .r-shop { font-size: 14px; }
+  @page { margin: 3mm; }
+}
+
 /* Toasts and offline banner */
 .toasts { position: fixed; inset-inline: 0; bottom: calc(16px + env(safe-area-inset-bottom)); display: grid; justify-items: center; gap: 8px; pointer-events: none; z-index: 50; }
 .toast { background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 12px; max-width: calc(100vw - 32px); box-shadow: var(--shadow); transition: opacity 0.3s, transform 0.3s; }

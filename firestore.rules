@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// Dokan rules — step 5: profiles, shops, roles, invites, locations, catalogue, stock, buying.
+// Dokan rules — step 6: profiles, shops, roles, invites, locations, catalogue, stock, buying, selling.
 // Every shop's data lives under shops/{shopId}; access needs an active member document there.
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -232,6 +232,68 @@ service cloud.firestore {
           && request.resource.data.locationId == resource.data.locationId;
         allow delete: if isManager(shopId) && inMyLocations(shopId, [resource.data.locationId]);
       }
+
+      // Sales and returns: created by any member at their own locations, never changed or deleted.
+      // Members limited to some locations only read those (queries must filter by locationId).
+      match /sales/{saleId} {
+        allow read: if isMember(shopId) && canSeeLocation(shopId, resource.data.locationId);
+        allow create: if isMember(shopId)
+          && request.resource.data.by == request.auth.uid
+          && request.resource.data.at == request.time
+          && inMyLocations(shopId, [request.resource.data.locationId])
+          && request.resource.data.lines is list && request.resource.data.lines.size() > 0
+          && request.resource.data.total is number && request.resource.data.total >= 0
+          && request.resource.data.onCredit is number
+          && (request.resource.data.onCredit <= 0 || request.resource.data.customerId is string);
+        allow update, delete: if false;
+      }
+
+      match /returns/{returnId} {
+        allow read: if isMember(shopId) && canSeeLocation(shopId, resource.data.locationId);
+        allow create: if isMember(shopId)
+          && request.resource.data.by == request.auth.uid
+          && request.resource.data.at == request.time
+          && inMyLocations(shopId, [request.resource.data.locationId])
+          && request.resource.data.amount is number && request.resource.data.amount >= 0;
+        allow update, delete: if false;
+      }
+
+      // Customers: every member can add one at the till and see balances (to sell on credit).
+      match /customers/{customerId} {
+        allow read: if isMember(shopId);
+        allow create, update: if isMember(shopId)
+          && request.resource.data.name is string && request.resource.data.name.size() > 0;
+        allow delete: if false;
+      }
+
+      match /customerAccounts/{customerId} {
+        allow read: if isMember(shopId);
+        allow create, update: if isMember(shopId) && request.resource.data.keys().hasOnly(['balance', 'updatedAt'])
+          && request.resource.data.balance is number;
+        allow delete: if false;
+      }
+
+      // Payments received from customers, and (managers only) opening balances or corrections.
+      match /customerPayments/{entryId} {
+        allow read: if isMember(shopId) && canSeeLocation(shopId, resource.data.locationId);
+        allow create: if isMember(shopId)
+          && request.resource.data.by == request.auth.uid
+          && inMyLocations(shopId, [request.resource.data.locationId])
+          && request.resource.data.amount is number && request.resource.data.amount > 0
+          && (request.resource.data.kind == 'payment' || (request.resource.data.kind == 'charge' && isManager(shopId)));
+        allow update, delete: if false;
+      }
+
+      // Day totals per location, for the dashboard. Only ever increased or decreased in the same
+      // batch as a sale, return or payment.
+      match /dailyStats/{statId} {
+        allow read: if isMember(shopId) && canSeeLocation(shopId, resource.data.locationId);
+        allow create, update: if isMember(shopId)
+          && inMyLocations(shopId, [request.resource.data.locationId])
+          && statId == request.resource.data.locationId + '_' + request.resource.data.date
+          && request.resource.data.keys().hasOnly(['locationId', 'date', 'sales', 'count', 'returns', 'credit', 'pay', 'collected', 'items', 'updatedAt']);
+        allow delete: if false;
+      }
       // Collections not listed here are closed by default.
     }
 
@@ -243,6 +305,10 @@ service cloud.firestore {
     function inMyLocations(shopId, ids) {
       return seesAllLocations(shopId) || ids.hasOnly(member(shopId).branchIds);
     }
+    // For reads: written so Firestore can check queries filtered by locationId.
+    function canSeeLocation(shopId, locId) {
+      return seesAllLocations(shopId) || locId in member(shopId).branchIds;
+    }
 
     function validStock(d) {
       return d.keys().hasOnly(['qty', 'updatedAt']) && d.qty is map;
@@ -250,8 +316,8 @@ service cloud.firestore {
 
     function validMove(shopId, d) {
       return d.by == request.auth.uid
-        // Employees only move stock by receiving goods; managers also adjust, transfer and count.
-        && (d.type == 'purchase' || (isManager(shopId) && d.type in ['adjust', 'transfer', 'count']))
+        // Every member sells, returns and receives goods; managers also adjust, transfer and count.
+        && (d.type in ['purchase', 'sale', 'return'] || (isManager(shopId) && d.type in ['adjust', 'transfer', 'count']))
         && d.productId is string
         && d.qty is number && d.qty > 0
         && d.locations is list && d.locations.size() > 0 && d.locations.size() <= 2

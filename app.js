@@ -26,6 +26,9 @@ async function start() {
   const { renderSuppliers, renderSupplier } = await import('./suppliers.js');
   const { renderPurchases, renderPurchaseForm } = await import('./purchases.js');
   const { isCostManager } = await import('./roles.js');
+  const { renderSell } = await import('./sell.js');
+  const { renderSales, renderSale } = await import('./sales.js');
+  const { renderCustomers, renderCustomer } = await import('./customers.js');
 
   // Listeners opened by screens for the shop being viewed; closed when leaving that shop.
   const live = new Map();
@@ -167,6 +170,11 @@ async function start() {
       const usable = me && !me.disabled;
       if (usable && sub === 'locations') return renderLocations(root, ctx, id);
       if (usable && sub === 'team') return renderTeam(root, ctx, id);
+      if (usable && sub === 'sell') return renderSell(root, ctx, id);
+      if (usable && sub === 'sales') return renderSales(root, ctx, id);
+      if (usable && sub === 'sale' && subId) return renderSale(root, ctx, id, subId);
+      if (usable && sub === 'customers') return renderCustomers(root, ctx, id);
+      if (usable && sub === 'customer' && subId) return renderCustomer(root, ctx, id, subId);
       if (usable && sub === 'products') return renderProducts(root, ctx, id);
       if (usable && sub === 'categories') return renderCategories(root, ctx, id);
       if (usable && sub === 'stock') return renderStock(root, ctx, id);

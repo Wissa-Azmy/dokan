@@ -31,6 +31,12 @@ Live: https://wissa-azmy.github.io/dokan/
 | `buying.js` | Invoice totals, extra costs spread by value, average cost, supplier balances |
 | `suppliers.js` | Suppliers, statements, payments |
 | `purchases.js` | Purchase list, invoice / goods-receipt form, adding prices, view |
+| `selling.js` | Sales, returns, customer payments and day totals (one batch each) |
+| `sell.js` | The selling screen: cart, scanning, checkout with split and down payments |
+| `scanner.js` | Camera barcode scanning (html5-qrcode, loaded on first use) |
+| `receipt.js` | Receipt on screen, WhatsApp / share text, 58 or 80 mm printing |
+| `sales.js` | Sales per day and branch, one sale, returns |
+| `customers.js` | Customers, credit balances, statements, payments received |
 | `app.js` | Start-up, listeners, hash routing, offline banner |
 | `firestore.rules` | Security rules |
 | `firestore.indexes.json` | Composite indexes (same as the console step below) |
