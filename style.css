@@ -276,6 +276,11 @@ a.row.link-row:active { transform: scale(0.99); }
 .badge.status-partial { background: #f9e7c2; color: #7a5410; }
 .badge.status-credit { background: #f3dcd9; color: var(--danger); }
 input[readonly] { background: #f5efe5; color: var(--muted); }
+.line-cost { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; font-size: 14px; color: var(--muted); }
+.line-cost:empty { display: none; }
+.line-cost strong { color: var(--teal); }
+.seg-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn.seg.on { background: var(--teal); border-color: var(--teal); color: #fff; }
 
 /* Toasts and offline banner */
 .toasts { position: fixed; inset-inline: 0; bottom: calc(16px + env(safe-area-inset-bottom)); display: grid; justify-items: center; gap: 8px; pointer-events: none; z-index: 50; }

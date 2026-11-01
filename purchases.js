@@ -158,15 +158,16 @@ export function renderPurchaseForm(root, ctx, shopId, purchaseId) {
     el('p', { class: 'field-hint' }, t('extrasHint')),
   ) : null;
 
+  // 'credit' and 'full' stay selected while the total changes; typing an amount makes it 'custom'.
+  let payMode = 'credit';
+  const creditBtn = el('button', { type: 'button', class: 'btn ghost seg', onclick: () => { payMode = 'credit'; recalc(); } }, t('onCredit'));
+  const fullBtn = el('button', { type: 'button', class: 'btn ghost seg', onclick: () => { payMode = 'full'; recalc(); } }, t('paidFull'));
   const paidField = numberField({ name: 'paid', label: t('paid') });
   const payCard = costs ? el('section', { class: 'card form' },
     el('h2', { class: 'section-title' }, t('paymentTitle')),
     summary,
+    el('div', { class: 'seg-group' }, creditBtn, fullBtn),
     paidField,
-    el('div', { class: 'actions' },
-      el('button', { type: 'button', class: 'btn ghost', onclick: () => { form.elements.paid.value = '0'; recalc(); } }, t('onCredit')),
-      el('button', { type: 'button', class: 'btn ghost', onclick: () => { form.elements.paid.value = String(totals().total); recalc(); } }, t('paidFull')),
-    ),
   ) : null;
 
   const submit = el('button', { type: 'submit', class: 'btn primary' }, t('save'));
@@ -184,7 +185,7 @@ export function renderPurchaseForm(root, ctx, shopId, purchaseId) {
     }
     const qtyInput = el('input', { type: 'text', inputmode: 'decimal', class: 'input num', value: preset ? String(preset.qty) : scanned ? '1' : '', readonly: completing || null, 'aria-label': t('qty') });
     const costInput = costs ? el('input', { type: 'text', inputmode: 'decimal', class: 'input num', value: preset?.unitCost != null ? String(preset.unitCost) : '', 'aria-label': t('unitCost') }) : null;
-    const landed = el('span', { class: 'muted small' });
+    const landed = el('div', { class: 'line-cost' });
     const line = { productId: p.id, qtyInput, costInput, landed };
     const rowEl = el('div', { class: 'line' },
       el('div', { class: 'line-head' },
@@ -200,8 +201,18 @@ export function renderPurchaseForm(root, ctx, shopId, purchaseId) {
     line.row = rowEl;
     lines.push(line);
     linesBox.append(rowEl);
-    for (const input of [qtyInput, costInput]) input?.addEventListener('input', recalc);
+    listen(qtyInput, costInput);
     recalc();
+  }
+
+  // Recalculate on every kind of change, so totals follow typing, pasting, autofill and ticks.
+  function listen(...inputs) {
+    for (const input of inputs) {
+      if (!input) continue;
+      input.addEventListener('input', recalc);
+      input.addEventListener('change', recalc);
+      input.addEventListener('keyup', recalc);
+    }
   }
 
   function addExtra() {
@@ -218,7 +229,7 @@ export function renderPurchaseForm(root, ctx, shopId, purchaseId) {
     );
     extras.push(x);
     extrasBox.append(x.row);
-    for (const input of [amountInput, onInvoiceInput]) input.addEventListener('input', recalc);
+    for (const input of [amountInput, onInvoiceInput]) listen(input);
     recalc();
   }
 
@@ -226,21 +237,40 @@ export function renderPurchaseForm(root, ctx, shopId, purchaseId) {
   const readLines = () => lines.map((l) => ({ productId: l.productId, qty: numOr0(l.qtyInput.value), unitCost: l.costInput ? numOr0(l.costInput.value) : null }));
   const readExtras = () => extras.map((x) => ({ label: x.labelInput.value.trim(), amount: numOr0(x.amountInput.value), onInvoice: x.onInvoiceInput.checked }))
     .filter((x) => x.amount > 0);
-  const totals = () => invoiceTotals({ lines: readLines(), discount: numOr0(form.elements.discount?.value), extras: readExtras() });
+  const totals = () => invoiceTotals({ lines: readLines(), discount: numOr0(discountField.querySelector('input').value), extras: readExtras() });
 
   function recalc() {
     if (!costs) return;
     const tot = totals();
-    lines.forEach((l, i) => { l.landed.textContent = tot.landed[i] ? t('landedCost', { n: fmtMoney(tot.landed[i]) }) : ''; });
-    const paid = numOr0(form.elements.paid?.value);
+    const data = readLines();
+    lines.forEach((l, i) => {
+      const { qty, unitCost } = data[i];
+      l.landed.replaceChildren();
+      if (!qty || !unitCost) return;
+      l.landed.append(
+        el('span', {}, `${t('lineTotal')}: ${fmtMoney(round2(qty * unitCost))}`),
+        el('strong', {}, t('landedCost', { n: fmtMoney(tot.landed[i]) })),
+      );
+    });
+
+    const paidInput = paidField.querySelector('input');
+    if (payMode === 'credit') paidInput.value = '0';
+    if (payMode === 'full') paidInput.value = String(tot.total);
+    const paid = numOr0(paidInput.value);
+    creditBtn.classList.toggle('on', payMode === 'credit');
+    fullBtn.classList.toggle('on', payMode === 'full');
+    creditBtn.setAttribute('aria-pressed', String(payMode === 'credit'));
+    fullBtn.setAttribute('aria-pressed', String(payMode === 'full'));
+
     summary.replaceChildren(
       el('div', { class: 'sum-line' }, el('span', {}, t('subtotal')), el('span', {}, fmtMoney(tot.subtotal))),
       el('div', { class: 'sum-line total' }, el('span', {}, t('total')), el('strong', {}, fmtMoney(tot.total))),
       el('p', { class: 'muted small' }, t('remaining', { n: fmtMoney(round2(tot.total - paid)) })),
     );
   }
-  form.elements.discount?.addEventListener('input', recalc);
-  form.elements.paid?.addEventListener('input', recalc);
+  listen(discountField.querySelector('input'));
+  // Typing an amount switches to a custom payment.
+  paidField.querySelector('input').addEventListener('input', () => { payMode = 'custom'; recalc(); });
 
   if (completing) existing.lines.forEach((l) => addLine(productById(l.productId) || { id: l.productId, unit: 'piece', nameAr: t('unknownProduct') }, false, l));
 
