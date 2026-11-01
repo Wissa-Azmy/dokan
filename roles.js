@@ -5,6 +5,9 @@ export const isActive = (m) => !!m && m.disabled !== true;
 export const isOwner = (m) => isActive(m) && m.role === 'owner';
 export const isManager = (m) => isActive(m) && (m.role === 'owner' || m.role === 'manager');
 
+// Owners, and managers allowed to see costs: may enter prices, cost purchases and see supplier balances.
+export const isCostManager = (m) => isManager(m) && (m.role === 'owner' || m.canSeeCosts === true);
+
 export function roleLabel(role) {
   return t(role === 'owner' ? 'roleOwner' : role === 'manager' ? 'roleManager' : 'roleEmployee');
 }

@@ -4,7 +4,7 @@ import { setDigits, getDigits, digitsOf } from './format.js';
 import { el, icon, iconButton, textField, selectField, setFieldError, focusFirst, busy, toast } from './forms.js';
 import { createShop } from './data.js';
 import { saveProfileField } from './sync.js';
-import { roleLabel } from './roles.js';
+import { roleLabel, isCostManager } from './roles.js';
 import { auth, signOut } from './firebase.js';
 
 let ctx = null; // { user, profile, shops: Map, go(path) }
@@ -105,6 +105,7 @@ export function renderShopHome(root, shopId) {
   const member = ctx.members.get(shopId);
   const disabled = member?.disabled === true;
   const manager = !disabled && (member?.role === 'owner' || member?.role === 'manager');
+  const costs = isCostManager(member);
   root.replaceChildren(
     header(shop ? localName(shop) : t('loading'), { back: '#/shops' }),
     el('main', { class: 'page' },
@@ -116,6 +117,8 @@ export function renderShopHome(root, shopId) {
       disabled || !member ? null : el('nav', { class: 'tiles' },
         tile(`#/shop/${shopId}/products`, 'box', t('products')),
         tile(`#/shop/${shopId}/stock`, 'store', t('stock')),
+        tile(`#/shop/${shopId}/purchases`, 'truck', costs ? t('purchases') : t('receiveGoods')),
+        manager ? tile(`#/shop/${shopId}/suppliers`, 'team', t('suppliers')) : null,
         manager ? tile(`#/shop/${shopId}/categories`, 'tag', t('categories')) : null,
         tile(`#/shop/${shopId}/locations`, 'pin', manager ? t('branches') : t('yourLocations')),
         manager ? tile(`#/shop/${shopId}/team`, 'team', t('team')) : null,

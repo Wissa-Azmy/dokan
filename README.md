@@ -27,6 +27,10 @@ Live: https://wissa-azmy.github.io/dokan/
 | `movements.js` | Every stock change: movement + atomic increment in one batch; history; stock counts |
 | `stock.js` | Stock per location, low-stock warnings, adjustments, transfers |
 | `count.js` | Shelf-by-shelf stock count and its review |
+| `picker.js` | Product search box with barcode-scanner support |
+| `buying.js` | Invoice totals, extra costs spread by value, average cost, supplier balances |
+| `suppliers.js` | Suppliers, statements, payments |
+| `purchases.js` | Purchase list, invoice / goods-receipt form, adding prices, view |
 | `app.js` | Start-up, listeners, hash routing, offline banner |
 | `firestore.rules` | Security rules |
 | `firestore.indexes.json` | Composite indexes (same as the console step below) |

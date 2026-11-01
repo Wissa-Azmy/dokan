@@ -23,6 +23,9 @@ async function start() {
   const { renderProducts, renderProductForm } = await import('./products.js');
   const { renderStock } = await import('./stock.js');
   const { renderCount } = await import('./count.js');
+  const { renderSuppliers, renderSupplier } = await import('./suppliers.js');
+  const { renderPurchases, renderPurchaseForm } = await import('./purchases.js');
+  const { isCostManager } = await import('./roles.js');
 
   // Listeners opened by screens for the shop being viewed; closed when leaving that shop.
   const live = new Map();
@@ -130,7 +133,7 @@ async function start() {
 
   const parseRoute = () => (location.hash || '#/shops').split('/').slice(1);
   const FORM_ROUTES = ['new-shop', 'prefs', 'join'];
-  const FORM_SUBS = ['product'];
+  const FORM_SUBS = ['product', 'purchase'];
   let formReady = false; // a shop form screen is drawn with all its data
 
   // Live data updates redraw list screens only, so forms being typed into are never reset.
@@ -168,6 +171,13 @@ async function start() {
       if (usable && sub === 'categories') return renderCategories(root, ctx, id);
       if (usable && sub === 'stock') return renderStock(root, ctx, id);
       if (usable && sub === 'count' && ['owner', 'manager'].includes(me.role)) return renderCount(root, ctx, id);
+      if (usable && sub === 'suppliers' && ['owner', 'manager'].includes(me.role)) return renderSuppliers(root, ctx, id);
+      if (usable && sub === 'supplier' && subId && isCostManager(me)) return renderSupplier(root, ctx, id, subId);
+      if (usable && sub === 'purchases') return renderPurchases(root, ctx, id);
+      if (usable && sub === 'purchase' && subId) {
+        formReady = renderPurchaseForm(root, ctx, id, subId);
+        return;
+      }
       if (usable && sub === 'product' && subId && ['owner', 'manager'].includes(me.role)) {
         formReady = renderProductForm(root, ctx, id, subId);
         return;

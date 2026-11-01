@@ -67,3 +67,17 @@ Set up: B is a manager limited to Branch 1; C is an employee.
 - ⛔ Anyone deletes a `stock` document.
 - ⛔ Anyone creates a movement with `by` set to someone else's UID.
 - ✅ Two phones adjust the same product at the same moment (e.g. +5 and −2). The result is exactly +3; neither change is lost.
+
+## Buying (step 5)
+Set up: B is a manager **without** "can see costs"; B2 is a manager **with** it; C is an employee at Branch 1.
+- ✅ A and B2 create a full purchase invoice; it ends as "costed", and `costs/{productId}` and `supplierAccounts/{supplierId}` update.
+- ✅ C records a goods receipt at Branch 1 (quantities only). Stock goes up and the receipt shows in C's list.
+- ⛔ C records a receipt at Branch 2.
+- ⛔ C creates a purchase with `costsEntered: true` (Playground).
+- ⛔ C reads someone else's receipt, or their own after it was costed.
+- ⛔ C or B read `costs`, `supplierAccounts` or `supplierPayments`.
+- ⛔ C creates a movement of type `adjust` (only `purchase` is allowed for employees).
+- ✅ B2 adds prices to C's receipt and applies costing.
+- ⛔ Anyone edits a purchase whose status is `costed`, or deletes any purchase.
+- ⛔ Anyone edits or deletes a supplier payment.
+- ✅ B (manager without costs) adds and edits suppliers, but sees no balances.

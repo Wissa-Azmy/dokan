@@ -257,6 +257,26 @@ h3.section-title { font-size: 15px; margin: 4px 0 0; }
 .diff-line > :not(:first-child) { text-align: end; font-variant-numeric: tabular-nums; }
 .diff-line.head { font-size: 13px; color: var(--muted); font-weight: 700; }
 
+/* Buying */
+.link-row { text-decoration: none; color: inherit; }
+a.row.link-row:active { transform: scale(0.99); }
+.money { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; flex: none; }
+.big-money { font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.balance-card { justify-items: start; }
+.picker { display: grid; gap: 6px; }
+.line { display: grid; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.line-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.line-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.line-fields .field-label { font-size: 13px; }
+.summary { display: grid; gap: 6px; }
+.sum-line { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.sum-line > :last-child { font-variant-numeric: tabular-nums; text-align: end; }
+.sum-line.total { font-size: 18px; border-top: 1px solid var(--line); padding-top: 8px; }
+.badge.status-paid { background: #dcefe2; color: var(--ok); }
+.badge.status-partial { background: #f9e7c2; color: #7a5410; }
+.badge.status-credit { background: #f3dcd9; color: var(--danger); }
+input[readonly] { background: #f5efe5; color: var(--muted); }
+
 /* Toasts and offline banner */
 .toasts { position: fixed; inset-inline: 0; bottom: calc(16px + env(safe-area-inset-bottom)); display: grid; justify-items: center; gap: 8px; pointer-events: none; z-index: 50; }
 .toast { background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 12px; max-width: calc(100vw - 32px); box-shadow: var(--shadow); transition: opacity 0.3s, transform 0.3s; }

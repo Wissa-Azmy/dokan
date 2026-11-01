@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// Dokan rules — step 4: profiles, shops, members and roles, invites, locations, catalogue, stock.
+// Dokan rules — step 5: profiles, shops, roles, invites, locations, catalogue, stock, buying.
 // Every shop's data lives under shops/{shopId}; access needs an active member document there.
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -19,6 +19,10 @@ service cloud.firestore {
     function hasRole(shopId, roles) { return isMember(shopId) && member(shopId).role in roles; }
     function isOwner(shopId) { return hasRole(shopId, ['owner']); }
     function isManager(shopId) { return hasRole(shopId, ['owner', 'manager']); }
+    // Owners, and managers allowed to see costs.
+    function isCostManager(shopId) {
+      return isManager(shopId) && (member(shopId).role == 'owner' || member(shopId).get('canSeeCosts', false) == true);
+    }
 
     // True while the shop is being created in this same batch by the current user.
     function creatingShop(shopId) {
@@ -144,11 +148,12 @@ service cloud.firestore {
 
       // Stock quantities per location: { qty: { locationId: n } }. The app always changes them in the
       // same batch as a movement; the rules allow only the locations the member may use. Never deleted.
+      // Employees change stock too, by receiving goods (and selling, from step 6).
       match /stock/{productId} {
         allow read: if isMember(shopId);
-        allow create: if isManager(shopId) && validStock(request.resource.data)
+        allow create: if isMember(shopId) && validStock(request.resource.data)
           && inMyLocations(shopId, request.resource.data.qty.keys());
-        allow update: if isManager(shopId) && validStock(request.resource.data)
+        allow update: if isMember(shopId) && validStock(request.resource.data)
           && inMyLocations(shopId, request.resource.data.qty.diff(resource.data.get('qty', {})).affectedKeys());
         allow delete: if false;
       }
@@ -156,7 +161,62 @@ service cloud.firestore {
       // Movements are the stock history: created once, never changed or deleted.
       match /movements/{moveId} {
         allow read: if isMember(shopId);
-        allow create: if isManager(shopId) && validMove(shopId, request.resource.data);
+        allow create: if isMember(shopId) && validMove(shopId, request.resource.data);
+        allow update, delete: if false;
+      }
+
+      // Purchases. Employees record receipts with quantities only and can read them until a
+      // manager adds prices. Costed invoices are locked.
+      match /purchases/{purchaseId} {
+        allow read: if isCostManager(shopId)
+          || (isMember(shopId)
+            && resource.data.createdBy == request.auth.uid
+            && resource.data.status == 'received'
+            && resource.data.costsEntered == false);
+        allow create: if isMember(shopId)
+          && request.resource.data.createdBy == request.auth.uid
+          && request.resource.data.status == 'received'
+          && request.resource.data.lines is list && request.resource.data.lines.size() > 0
+          && inMyLocations(shopId, [request.resource.data.locationId])
+          && (isCostManager(shopId) || request.resource.data.costsEntered == false);
+        allow update: if isCostManager(shopId)
+          && resource.data.status == 'received'
+          && request.resource.data.createdBy == resource.data.createdBy
+          && request.resource.data.locationId == resource.data.locationId
+          && request.resource.data.number == resource.data.number;
+        allow delete: if false;
+      }
+
+      // Average cost per product, and its history per purchase. Hidden from anyone without cost access.
+      match /costs/{productId} {
+        allow read, create, update: if isCostManager(shopId);
+        allow delete: if false;
+        match /history/{purchaseId} {
+          allow read, create: if isCostManager(shopId);
+          allow update, delete: if false;
+        }
+      }
+
+      // Supplier contact details: everyone reads (for receipts), managers edit, nobody deletes.
+      match /suppliers/{supplierId} {
+        allow read: if isMember(shopId);
+        allow create, update: if isManager(shopId)
+          && request.resource.data.name is string && request.resource.data.name.size() > 0;
+        allow delete: if false;
+      }
+
+      // What we owe each supplier.
+      match /supplierAccounts/{supplierId} {
+        allow read, create, update: if isCostManager(shopId);
+        allow delete: if false;
+      }
+
+      match /supplierPayments/{entryId} {
+        allow read: if isCostManager(shopId);
+        allow create: if isCostManager(shopId)
+          && request.resource.data.by == request.auth.uid
+          && request.resource.data.kind in ['payment', 'charge']
+          && request.resource.data.amount is number && request.resource.data.amount > 0;
         allow update, delete: if false;
       }
 
@@ -190,7 +250,8 @@ service cloud.firestore {
 
     function validMove(shopId, d) {
       return d.by == request.auth.uid
-        && d.type in ['adjust', 'transfer', 'count']
+        // Employees only move stock by receiving goods; managers also adjust, transfer and count.
+        && (d.type == 'purchase' || (isManager(shopId) && d.type in ['adjust', 'transfer', 'count']))
         && d.productId is string
         && d.qty is number && d.qty > 0
         && d.locations is list && d.locations.size() > 0 && d.locations.size() <= 2

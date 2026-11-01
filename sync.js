@@ -62,6 +62,15 @@ export function watchShop(uid, shopId, onData) {
   );
 }
 
+// Watches one document. Calls onData with { id, ...data }, or false if it's missing or access is refused.
+export function watchDoc(path, onData) {
+  return onSnapshot(
+    doc(db, ...path),
+    (snap) => onData(snap.exists() ? { id: snap.id, ...snap.data() } : false),
+    () => onData(false),
+  );
+}
+
 // Watches a collection, e.g. watchCollection(['shops', id, 'locations'], set).
 // Calls onData with an array of { id, ...data }, or [] if access is refused.
 export function watchCollection(path, onData, ...constraints) {
