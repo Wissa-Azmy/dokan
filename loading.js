@@ -84,15 +84,46 @@ async function checkForUpdate() {
   }
 }
 
+// Makes sure the next load gets the new files from the server, not from a cache:
+// 1. re-downloads every file this page loaded, which replaces the browser's own copy;
+// 2. empties the offline copy, so the worker can't hand out an old file;
+// 3. installs the new offline worker and waits (briefly) until it is in charge.
+async function getNewVersion() {
+  const own = performance.getEntriesByType('resource')
+    .map((e) => e.name)
+    .filter((u) => u.startsWith(location.origin) && !u.includes('?check='));
+  const files = [...new Set([location.href.split('#')[0], ...own])];
+  await Promise.all(files.map((u) => fetch(u, { cache: 'reload' }).catch(() => {})));
+
+  try {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter((k) => k.startsWith('dokan-')).map((k) => caches.delete(k)));
+  } catch { /* no cache storage */ }
+
+  const reg = await navigator.serviceWorker?.getRegistration().catch(() => null);
+  if (!reg) return;
+  await reg.update().catch(() => {});
+  const next = reg.installing || reg.waiting;
+  if (!next) return;
+  await new Promise((resolve) => {
+    const done = () => { if (next.state === 'activated' || next.state === 'redundant') resolve(); };
+    next.addEventListener('statechange', done);
+    done();
+    setTimeout(resolve, 5000);
+  });
+}
+
 function showUpdateBanner(latest) {
   if (document.getElementById('update-banner')) return;
+  const button = el('button', { type: 'button', class: 'btn primary', onclick: async () => {
+    button.disabled = true;
+    button.textContent = t('loading');
+    await getNewVersion().catch(() => {});
+    location.reload();
+  } }, t('reload'));
   const banner = el('div', { id: 'update-banner', class: 'update-banner', role: 'status' },
     el('span', {}, t('newVersion', { v: latest })),
-    el('button', { type: 'button', class: 'btn primary', onclick: async () => {
-      // Let the offline worker fetch the new files too, then reload.
-      try { await (await navigator.serviceWorker?.getRegistration())?.update(); } catch { /* ignore */ }
-      location.reload();
-    } }, t('reload')),
+    button,
   );
   document.body.append(banner);
 }

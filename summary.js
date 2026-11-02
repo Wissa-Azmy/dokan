@@ -68,10 +68,16 @@ export function homeSummary(ctx, shopId) {
   const prevRate = (rates || []).find((r) => r.date !== shop?.settings?.rateDate)?.rate;
   const time = new Intl.DateTimeFormat(getLang() === 'ar' ? 'ar-EG' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
   const loading = !days || !products || !stock || !accounts;
+  // The owner can hide the money amounts, e.g. when customers can see the screen.
+  // Counts, low stock, the dollar rate and waiting invoices stay.
+  const hideMoney = !!shop?.settings?.hideHomeMoney;
 
-  return el('div', { class: 'home-summary' },
-    el('p', { class: 'muted small' }, time),
-    el('div', { class: 'home-today' },
+  const today_ = hideMoney
+    ? el('div', { class: 'home-today' },
+      el('span', { class: 'muted small' }, t('todaySales')),
+      el('strong', { class: 'big-money' }, loading ? '…' : t('salesCount', { n: fmtNum(count) })),
+    )
+    : el('div', { class: 'home-today' },
       el('span', { class: 'muted small' }, t('todaySales')),
       el('strong', { class: 'big-money' }, loading ? '…' : fmtMoney(salesToday)),
       el('span', { class: 'row-meta' },
@@ -79,11 +85,15 @@ export function homeSummary(ctx, shopId) {
         loading ? null : changeBadge(salesToday, sum(before, net)),
         loading || !before.length ? null : el('span', { class: 'muted small' }, t('vsYesterday', { n: fmtMoney(sum(before, net)) })),
       ),
-    ),
+    );
+
+  return el('div', { class: 'home-summary' },
+    el('p', { class: 'muted small' }, time),
+    today_,
     el('div', { class: 'home-stats' },
-      stat(t('cashToday'), loading ? '…' : fmtMoney(sum(todays, cashTaken)), { href: `#/shop/${shopId}/cash` }),
+      hideMoney ? null : stat(t('cashToday'), loading ? '…' : fmtMoney(sum(todays, cashTaken)), { href: `#/shop/${shopId}/cash` }),
       stat(t('lowStockItems'), loading ? '…' : fmtNum(low), { href: `#/shop/${shopId}/stock`, cls: low ? 'warn' : '' }),
-      stat(t('owedByCustomers'), loading ? '…' : fmtMoney(owed), { href: `#/shop/${shopId}/customers` }),
+      hideMoney ? null : stat(t('owedByCustomers'), loading ? '…' : fmtMoney(owed), { href: `#/shop/${shopId}/customers` }),
       rate ? stat(t('usdRateTitle'), `${fmtNum(rate, 2)} ${t('egp')}`, { href: manager ? `#/shop/${shopId}/rate` : null, sub: prevRate ? changeBadge(rate, prevRate) : null }) : null,
       costs && waiting?.length ? stat(t('waitingCosts'), fmtNum(waiting.length), { href: `#/shop/${shopId}/purchases`, cls: 'warn' }) : null,
     ),

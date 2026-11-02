@@ -2,7 +2,7 @@
 // shows up on the next reload) with the cached copy as the offline fallback. Firebase SDK files
 // and fonts are versioned, so they're served from the cache once fetched.
 // Firestore traffic and the dollar-rate APIs are never touched here.
-const CACHE = 'dokan-v4';
+const CACHE = 'dokan-v5';
 
 const APP_FILES = [
   './', './index.html', './style.css', './manifest.webmanifest', './icon.svg',
@@ -24,7 +24,8 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE)
       // One missing file must not stop the rest from being cached.
-      .then((cache) => Promise.all(APP_FILES.map((f) => cache.add(f).catch(() => {}))))
+      // 'reload' skips the browser's HTTP cache, so a new worker never stores old files.
+      .then((cache) => Promise.all(APP_FILES.map((f) => cache.add(new Request(f, { cache: 'reload' })).catch(() => {}))))
       .then(() => self.skipWaiting()),
   );
 });
@@ -37,6 +38,11 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// A page load (navigate) request can't be copied with options, so it is rebuilt from its URL.
+const fresh = (req) => (req.mode === 'navigate'
+  ? new Request(req.url, { cache: 'no-cache', credentials: 'same-origin' })
+  : new Request(req, { cache: 'no-cache' }));
+
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
@@ -46,7 +52,9 @@ self.addEventListener('fetch', (event) => {
 
   if (own) {
     event.respondWith(
-      fetch(req)
+      // 'no-cache' asks the server every time (a quick 304 when unchanged). GitHub Pages lets
+      // browsers keep files for 10 minutes, which made Reload pick up the old version again.
+      fetch(fresh(req))
         .then((res) => {
           if (res.ok) caches.open(CACHE).then((c) => c.put(req, res.clone()));
           return res;

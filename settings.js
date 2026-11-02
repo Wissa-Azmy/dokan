@@ -2,7 +2,7 @@
 // so two devices editing different fields never overwrite each other.
 import { t, errorText } from './i18n.js';
 import { optionalNum } from './format.js';
-import { el, icon, textField, numberField, selectField, setFieldError, toast } from './forms.js';
+import { el, icon, textField, numberField, selectField, checkboxField, setFieldError, toast } from './forms.js';
 import { saveShopSetting, saveShopField } from './sync.js';
 import { header } from './screens.js';
 import { formulaBox } from './prices.js';
@@ -38,6 +38,10 @@ export function renderSettings(root, ctx, shopId) {
       el('h2', { class: 'section-title' }, t('receipt')),
       textField({ name: 'receiptFooter', label: t('receiptFooter'), value: s.receiptFooter || '', hint: t('receiptFooterHint') }),
     ),
+    el('section', { class: 'card form' },
+      el('h2', { class: 'section-title' }, t('homeCard')),
+      checkboxField({ name: 'hideHomeMoney', label: t('hideHomeMoney'), checked: !!s.hideHomeMoney, hint: t('hideHomeMoneyHint') }),
+    ),
   );
   const f = form.elements;
   form.addEventListener('submit', (e) => e.preventDefault());
@@ -61,6 +65,7 @@ export function renderSettings(root, ctx, shopId) {
   }
   f.rateMode.addEventListener('change', () => saved(saveShopSetting(shopId, 'rateMode', f.rateMode.value)));
   f.receiptFooter.addEventListener('change', () => saved(saveShopSetting(shopId, 'receiptFooter', f.receiptFooter.value.trim())));
+  f.hideHomeMoney.addEventListener('change', () => saved(saveShopSetting(shopId, 'hideHomeMoney', f.hideHomeMoney.checked)));
 
   root.replaceChildren(
     header(t('shopSettings'), { back: `#/shop/${shopId}` }),

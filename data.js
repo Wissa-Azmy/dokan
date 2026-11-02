@@ -12,6 +12,7 @@ export const DEFAULT_SETTINGS = {
   rateMode: 'auto',
   receiptWidth: '80',
   receiptFooter: '',
+  hideHomeMoney: false,
 };
 
 // Creates the shop, makes the user its owner, adds the first branch and links the shop to the user.
