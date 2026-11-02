@@ -1,11 +1,13 @@
 // Screens for step 1: header, shop list, new shop, shop home and preferences.
 import { t, getLang, setLang, localName, errorText } from './i18n.js';
-import { setDigits, getDigits, digitsOf, fmtNum } from './format.js';
+import { setDigits, getDigits, digitsOf } from './format.js';
 import { el, icon, iconButton, textField, selectField, setFieldError, focusFirst, busy, toast } from './forms.js';
 import { createShop } from './data.js';
 import { saveProfileField } from './sync.js';
 import { roleLabel, isCostManager } from './roles.js';
 import { auth, signOut } from './firebase.js';
+import { APP_VERSION } from './version.js';
+import { homeSummary } from './summary.js';
 
 let ctx = null; // { user, profile, shops: Map, go(path) }
 
@@ -33,8 +35,15 @@ export function langSwitch(rerender) {
 
 const tile = (href, iconName, label) => el('a', { class: 'card tile', href }, el('span', { class: 'tile-icon' }, icon(iconName)), el('span', { class: 'tile-label' }, label), el('span', { class: 'tile-go flip' }, icon('chevron')));
 
+// A shimmer placeholder card, shown while a shop's first data is on its way.
+export const skeletonCard = () => el('div', { class: 'card sk-card', 'aria-hidden': 'true' },
+  el('span', { class: 'sk sk-icon' }),
+  el('span', { class: 'sk-lines' }, el('span', { class: 'sk sk-line w70' }), el('span', { class: 'sk sk-line w40' })),
+);
+
 export function header(title, { back } = {}) {
   return el('header', { class: 'topbar' },
+    el('span', { class: 'version-tag corner' }, `v${APP_VERSION}`),
     back ? iconButton('back', t('myShops'), () => ctx.go(back), 'flip') : brand(),
     el('h1', { class: 'topbar-title' }, title || ''),
     el('div', { class: 'topbar-actions' },
@@ -51,6 +60,7 @@ export function renderShops(root) {
   for (const id of ids) {
     const shop = ctx.shops.get(id);
     const member = ctx.members.get(id);
+    if (!shop && !member) { list.append(skeletonCard()); continue; }
     list.append(
       el('a', { class: 'card shop-card', href: `#/shop/${id}` },
         el('span', { class: 'shop-icon' }, icon('store')),
@@ -107,22 +117,26 @@ export function renderShopHome(root, shopId) {
   const manager = !disabled && (member?.role === 'owner' || member?.role === 'manager');
   const owner = !disabled && member?.role === 'owner';
   const costs = isCostManager(member);
-  const rate = shop?.settings?.usdRate;
   const group = (title, ...tiles) => {
     const items = tiles.filter(Boolean);
     return items.length ? el('section', { class: 'section' }, el('h2', { class: 'section-title' }, title), el('nav', { class: 'tiles grid' }, items)) : null;
   };
   const usable = !disabled && member;
+  // Still waiting for this shop's first data: show placeholders instead of empty text.
+  if (!shop && !member) {
+    root.replaceChildren(header('', { back: '#/shops' }), el('main', { class: 'page' }, skeletonCard(), skeletonCard(), skeletonCard()));
+    return;
+  }
   root.replaceChildren(
-    header(shop ? localName(shop) : t('loading'), { back: '#/shops' }),
+    header(shop ? localName(shop) : '', { back: '#/shops' }),
     el('main', { class: 'page' },
-      el('section', { class: 'card hero' },
-        el('h2', {}, shop ? localName(shop) : ''),
-        el('div', { class: 'row-meta' },
+      el('section', { class: 'card hero home-card' },
+        el('div', { class: 'home-head' },
+          el('h2', {}, shop ? localName(shop) : ''),
           member ? el('span', { class: `badge role-${member.role}` }, roleLabel(member.role)) : null,
-          rate ? el(manager ? 'a' : 'span', { class: 'chip', href: manager ? `#/shop/${shopId}/rate` : null }, `$1 = ${fmtNum(rate, 2)} ${t('egp')}`) : null,
         ),
         disabled ? el('p', { class: 'form-error' }, t('accessDisabled')) : null,
+        usable && shop ? homeSummary(ctx, shopId) : null,
       ),
       usable ? el('a', { class: 'btn primary sell-btn', href: `#/shop/${shopId}/sell` }, icon('cart'), t('sell')) : null,
       usable ? group(t('groupDaily'),

@@ -1,8 +1,9 @@
 // App start: auth state, profile and shop listeners, and hash routing.
 import { isConfigured } from './config.js';
-import { t, setLang, getLang, errorText } from './i18n.js';
-import { el, toast } from './forms.js';
+import { t, setLang, getLang } from './i18n.js';
+import { el } from './forms.js';
 import { setDigits, getDigits } from './format.js';
+import { renderLoadingView, renderLoadError, setLoadStatus, startUpdateChecks } from './loading.js';
 
 const root = document.getElementById('app');
 
@@ -14,12 +15,16 @@ if ('serviceWorker' in navigator) {
 if (!isConfigured) {
   root.replaceChildren(el('main', { class: 'page' }, el('div', { class: 'card hero' }, el('h2', {}, t('appName')), el('p', {}, t('notConfigured')))));
 } else {
-  start();
+  // Something to look at straight away, while the app's files and Firebase load.
+  setLoadStatus('loadApp');
+  renderLoadingView(root, { retry: () => location.reload() });
+  startUpdateChecks();
+  start().catch((err) => renderLoadError(root, err));
 }
 
 async function start() {
   const { auth, onAuthStateChanged } = await import('./firebase.js');
-  const { watchProfile, watchShop, watchMember, saveProfileField } = await import('./sync.js');
+  const { watchProfile, watchShop, watchMember, saveProfileField, restartListeners, onListenerError } = await import('./sync.js');
   const { renderAuth } = await import('./auth.js');
   const screens = await import('./screens.js');
   const { renderLocations } = await import('./locations.js');
@@ -126,6 +131,7 @@ async function start() {
         // The cloud wins: apply the saved language and digits to this device.
         if (profile.lang && profile.lang !== getLang()) setLang(profile.lang);
         if (profile.digits && profile.digits !== getDigits()) setDigits(profile.digits);
+        if (first && profile.shopIds?.length) setLoadStatus('loadShops');
         syncShopListeners(profile.shopIds || []);
         if (first) {
           const pending = sessionStorage.getItem('dokan.pendingInvite');
@@ -135,17 +141,29 @@ async function start() {
             location.hash = `#/shop/${profile.lastShopId}`;
           }
         }
+        // The first cloud data always replaces the loading view; later changes redraw gently.
         first ? render() : refresh();
       },
-      (err) => toast(errorText(err), 'error'),
     );
   });
 
+  // While the loading view shows, a failing listener says so; it restarts itself.
+  onListenerError(() => { if (root.querySelector('.loading-view')) setLoadStatus(navigator.onLine ? 'loadRetrying' : 'loadOffline'); });
+
   window.addEventListener('hashchange', render);
 
-  function renderLoading() {
-    root.replaceChildren(el('div', { class: 'splash' }, screens.brand(true), el('p', { class: 'muted' }, t('loading'))));
+  // "Try again": restart every listener now instead of waiting for its timer, then redraw.
+  function retry() {
+    restartListeners();
+    if (ctx.user && ctx.profile) render();
   }
+
+  function renderLoading() {
+    setLoadStatus('loadProfile');
+    renderLoadingView(root, { retry });
+  }
+  setLoadStatus('loadAccount');
+  renderLoadingView(root, { retry: () => location.reload() });
 
   const parseRoute = () => (location.hash || '#/shops').split('/').slice(1);
   const FORM_ROUTES = ['new-shop', 'prefs', 'join'];
@@ -162,6 +180,8 @@ async function start() {
   // A shop form still waiting for its data is redrawn until it's ready. While a field has focus,
   // the redraw waits until it loses focus, so the phone keyboard doesn't close mid-number.
   function refresh() {
+    // Whatever arrives while the loading view or a skeleton shows replaces it.
+    if (root.querySelector('.loading-view, .sk-card')) return render();
     const [route, , sub] = parseRoute();
     if (FORM_ROUTES.includes(route)) return;
     if (FORM_SUBS.includes(sub) && formReady) return;

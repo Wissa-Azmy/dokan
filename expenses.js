@@ -13,7 +13,7 @@ import { today } from './suppliers.js';
 import { PAY_METHODS, round2 } from './buying.js';
 import { addStats } from './selling.js';
 
-export const EXPENSE_TYPES = ['rent', 'salaries', 'electricity', 'water', 'internet', 'transport', 'maintenance', 'supplies', 'taxes', 'other'];
+export const EXPENSE_TYPES = ['rent', 'salaries', 'electricity', 'water', 'internet', 'transport', 'packaging', 'maintenance', 'supplies', 'taxes', 'other'];
 const ALL = '__all';
 
 export function recordExpense(shopId, e, uid) {

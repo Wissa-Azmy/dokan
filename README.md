@@ -48,6 +48,9 @@ Live: https://wissa-azmy.github.io/dokan/
 | `csv.js` | CSV exports (sales, expenses, purchases, products, customers) |
 | `backup.js` | Backup to file or cloud, restore, clear transactions, delete shop |
 | `sw.js`, `manifest.webmanifest`, `icon.svg` | Offline app loading and "Add to Home Screen" |
+| `version.js` | `APP_VERSION`: **bump it with every push** so open devices offer "Reload" |
+| `loading.js` | Loading view (spinner, status, skeleton, "Try again") and the new-version check |
+| `summary.js` | The shop home card: today's sales, cash, low stock, balances, USD rate |
 | `app.js` | Start-up, listeners, hash routing, offline banner |
 | `firestore.rules` | Security rules |
 | `firestore.indexes.json` | Composite indexes (same as the console step below) |

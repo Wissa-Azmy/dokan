@@ -3,6 +3,7 @@ import { auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendP
 import { t, errorText } from './i18n.js';
 import { el, textField, setFieldError, focusFirst, busy, toast } from './forms.js';
 import { langSwitch, brand } from './screens.js';
+import { APP_VERSION } from './version.js';
 
 export function renderAuth(root, mode = 'signIn') {
   const isUp = mode === 'signUp';
@@ -51,7 +52,7 @@ export function renderAuth(root, mode = 'signIn') {
 
   root.replaceChildren(
     el('div', { class: 'auth-screen' },
-      el('div', { class: 'auth-top' }, langSwitch(() => renderAuth(root, mode))),
+      el('div', { class: 'auth-top' }, el('span', { class: 'version-tag' }, `v${APP_VERSION}`), langSwitch(() => renderAuth(root, mode))),
       brand(true),
       el('p', { class: 'tagline' }, t('tagline')),
       form,
