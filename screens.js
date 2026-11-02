@@ -1,6 +1,6 @@
 // Screens for step 1: header, shop list, new shop, shop home and preferences.
 import { t, getLang, setLang, localName, errorText } from './i18n.js';
-import { setDigits, getDigits, digitsOf } from './format.js';
+import { setDigits, getDigits, digitsOf, fmtNum } from './format.js';
 import { el, icon, iconButton, textField, selectField, setFieldError, focusFirst, busy, toast } from './forms.js';
 import { createShop } from './data.js';
 import { saveProfileField } from './sync.js';
@@ -105,27 +105,48 @@ export function renderShopHome(root, shopId) {
   const member = ctx.members.get(shopId);
   const disabled = member?.disabled === true;
   const manager = !disabled && (member?.role === 'owner' || member?.role === 'manager');
+  const owner = !disabled && member?.role === 'owner';
   const costs = isCostManager(member);
+  const rate = shop?.settings?.usdRate;
+  const group = (title, ...tiles) => {
+    const items = tiles.filter(Boolean);
+    return items.length ? el('section', { class: 'section' }, el('h2', { class: 'section-title' }, title), el('nav', { class: 'tiles grid' }, items)) : null;
+  };
+  const usable = !disabled && member;
   root.replaceChildren(
     header(shop ? localName(shop) : t('loading'), { back: '#/shops' }),
     el('main', { class: 'page' },
       el('section', { class: 'card hero' },
         el('h2', {}, shop ? localName(shop) : ''),
-        member ? el('span', { class: `badge role-${member.role}` }, roleLabel(member.role)) : null,
-        el('p', { class: disabled ? 'form-error' : 'muted' }, disabled ? t('accessDisabled') : t('comingNext')),
+        el('div', { class: 'row-meta' },
+          member ? el('span', { class: `badge role-${member.role}` }, roleLabel(member.role)) : null,
+          rate ? el(manager ? 'a' : 'span', { class: 'chip', href: manager ? `#/shop/${shopId}/rate` : null }, `$1 = ${fmtNum(rate, 2)} ${t('egp')}`) : null,
+        ),
+        disabled ? el('p', { class: 'form-error' }, t('accessDisabled')) : null,
       ),
-      disabled || !member ? null : el('a', { class: 'btn primary sell-btn', href: `#/shop/${shopId}/sell` }, icon('cart'), t('sell')),
-      disabled || !member ? null : el('nav', { class: 'tiles' },
+      usable ? el('a', { class: 'btn primary sell-btn', href: `#/shop/${shopId}/sell` }, icon('cart'), t('sell')) : null,
+      usable ? group(t('groupDaily'),
         tile(`#/shop/${shopId}/sales`, 'receipt', t('sales')),
         tile(`#/shop/${shopId}/customers`, 'user', t('customers')),
+        tile(`#/shop/${shopId}/cash`, 'cash', t('cashDay')),
+        manager ? tile(`#/shop/${shopId}/expenses`, 'cash', t('expenses')) : null,
+      ) : null,
+      usable ? group(t('groupStock'),
         tile(`#/shop/${shopId}/products`, 'box', t('products')),
         tile(`#/shop/${shopId}/stock`, 'store', t('stock')),
         tile(`#/shop/${shopId}/purchases`, 'truck', costs ? t('purchases') : t('receiveGoods')),
         manager ? tile(`#/shop/${shopId}/suppliers`, 'team', t('suppliers')) : null,
-        manager ? tile(`#/shop/${shopId}/categories`, 'tag', t('categories')) : null,
-        tile(`#/shop/${shopId}/locations`, 'pin', manager ? t('branches') : t('yourLocations')),
-        manager ? tile(`#/shop/${shopId}/team`, 'team', t('team')) : null,
-      ),
+        costs ? tile(`#/shop/${shopId}/prices`, 'tag', t('priceCheck')) : null,
+      ) : null,
+      usable && manager ? group(t('groupManage'),
+        tile(`#/shop/${shopId}/dashboard`, 'chart', t('dashboard')),
+        tile(`#/shop/${shopId}/rate`, 'globe', t('usdRateTitle')),
+        tile(`#/shop/${shopId}/categories`, 'tag', t('categories')),
+        tile(`#/shop/${shopId}/locations`, 'pin', t('branches')),
+        tile(`#/shop/${shopId}/team`, 'team', t('team')),
+        owner ? tile(`#/shop/${shopId}/settings`, 'gear', t('shopSettings')) : null,
+      ) : null,
+      usable && !manager ? group(t('groupManage'), tile(`#/shop/${shopId}/locations`, 'pin', t('yourLocations'))) : null,
       el('a', { class: 'btn ghost', href: '#/shops' }, t('switchShop')),
     ),
   );

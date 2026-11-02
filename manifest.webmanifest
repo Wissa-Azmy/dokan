@@ -1,0 +1,15 @@
+{
+  "name": "دكان · Dokan",
+  "short_name": "Dokan",
+  "description": "Stock, buying, selling and money for local shops",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "dir": "auto",
+  "lang": "ar",
+  "background_color": "#fbf5ea",
+  "theme_color": "#b5502e",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

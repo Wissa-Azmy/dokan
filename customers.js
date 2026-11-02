@@ -84,7 +84,7 @@ export function renderCustomers(root, ctx, shopId) {
   view = { shopId, page, update(c, a) { cur = { customers: c, accounts: a }; draw(); } };
 }
 
-// onSaved(id) is called with the new or edited customer's id.
+// onSaved(id, { name, phone, notes }) is called with the new or edited customer.
 export function customerDialog(shopId, c, onSaved) {
   openDialog(c ? t('editCustomer') : t('addCustomer'), (body, close) => {
     const form = el('form', { class: 'form', novalidate: true },
@@ -103,11 +103,12 @@ export function customerDialog(shopId, c, onSaved) {
       const name = f.name.value.trim();
       setFieldError(form, 'name', name ? '' : t('required'));
       if (!name) return;
-      const { id, done } = saveCustomer(shopId, c?.id, { name, phone: f.phone.value.trim(), notes: f.notes.value.trim(), active: c ? f.active.checked : true });
+      const data = { name, phone: f.phone.value.trim(), notes: f.notes.value.trim(), active: c ? f.active.checked : true };
+      const { id, done } = saveCustomer(shopId, c?.id, data);
       done.catch((err) => toast(errorText(err), 'error'));
       toast(t('saved'));
       close();
-      onSaved?.(id);
+      onSaved?.(id, data);
     });
     body.append(form);
   });
@@ -236,7 +237,7 @@ export function pickCustomerDialog(ctx, shopId, onPick) {
         el('button', { type: 'button', class: 'btn ghost', onclick: () => { close(); onPick(null); } }, t('noCustomer')),
         el('button', { type: 'button', class: 'btn primary', onclick: () => {
           close();
-          customerDialog(shopId, null, (id) => onPick({ id, name: '' }));
+          customerDialog(shopId, null, (id, data) => onPick({ id, ...data }));
         } }, icon('plus'), t('addCustomer')),
       ),
     );

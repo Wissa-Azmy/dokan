@@ -143,7 +143,9 @@ export function renderSell(root, ctx, shopId) {
     openDialog(t('checkout'), (body, close) => {
       const payments = [{ method: 'cash', amount: '' }];
       let customerId = cart.customerId;
-      const customer = () => (cur.customers || []).find((c) => c.id === customerId);
+      // A customer added just now isn't in the live list yet, so keep what the picker returned.
+      let picked = null;
+      const customer = () => (cur.customers || []).find((c) => c.id === customerId) || (picked?.id === customerId ? picked : null);
 
       const customerRow = el('div', { class: 'sum-line customer-row' });
       const discountField = numberField({ name: 'discount', label: t('discount'), value: cart.discount ? String(cart.discount) : '' });
@@ -164,8 +166,8 @@ export function renderSell(root, ctx, shopId) {
         const c = customer();
         customerRow.replaceChildren(
           el('span', {}, t('customer')),
-          el('button', { type: 'button', class: 'chip', onclick: () => pickCustomerDialog(ctx, shopId, (picked) => { customerId = picked?.id || null; drawCustomer(); recalc(); }) },
-            icon('user'), c ? `${c.name} · ${fmtMoney(customerBalance(cur.accounts, c.id))}` : customerId ? t('loading') : t('noCustomer')),
+          el('button', { type: 'button', class: 'chip', onclick: () => pickCustomerDialog(ctx, shopId, (p) => { picked = p; customerId = p?.id || null; drawCustomer(); recalc(); }) },
+            icon('user'), c ? `${c.name} · ${fmtMoney(customerBalance(cur.accounts, c.id))}` : t('noCustomer')),
         );
       }
 
@@ -190,12 +192,13 @@ export function renderSell(root, ctx, shopId) {
         const s = settle(tot.total, readPayments());
         errorBox.textContent = s.error ? t(s.error) : '';
         dueField.hidden = !(s.onCredit > 0);
-        summary.replaceChildren(
+        // Only the lines that apply; empty ones are left out (replaceChildren would print "null").
+        summary.replaceChildren(...[
           el('div', { class: 'sum-line total' }, el('span', {}, t('total')), el('strong', {}, fmtMoney(tot.total))),
           s.error ? null : el('div', { class: 'sum-line' }, el('span', {}, t('paidNow')), el('span', {}, fmtMoney(s.paid))),
           s.change ? el('div', { class: 'sum-line change' }, el('span', {}, t('change')), el('strong', {}, fmtMoney(s.change))) : null,
           !s.error && s.onCredit > 0 ? el('div', { class: 'sum-line credit' }, el('span', {}, t('pay_credit')), el('strong', {}, fmtMoney(s.onCredit))) : null,
-        );
+        ].filter(Boolean));
         return { tot, s };
       }
       discountInput.addEventListener('input', recalc);

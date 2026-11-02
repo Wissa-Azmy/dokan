@@ -34,15 +34,18 @@ export function settle(total, payments) {
 const statsRef = (shopId, locId, date) => doc(db, 'shops', shopId, 'dailyStats', `${locId}_${date}`);
 
 // Adds to the day's totals for one location. All numbers are increments, so devices never overwrite each other.
-function addStats(batch, shopId, locId, date, { sales = 0, count = 0, returns = 0, credit = 0, pay = {}, collected = {}, items = [] }) {
+// pay: kept from sales (refunds negative) · collected: customer payments · paidOut: expenses, per method.
+export function addStats(batch, shopId, locId, date, { sales = 0, count = 0, returns = 0, credit = 0, expenses = 0, pay = {}, collected = {}, paidOut = {}, items = [] }) {
   const inc = (n) => increment(round2(n));
   const data = { locationId: locId, date, updatedAt: serverTimestamp() };
   if (sales) data.sales = inc(sales);
   if (count) data.count = increment(count);
   if (returns) data.returns = inc(returns);
   if (credit) data.credit = inc(credit);
+  if (expenses) data.expenses = inc(expenses);
   if (Object.keys(pay).length) data.pay = Object.fromEntries(Object.entries(pay).map(([m, a]) => [m, inc(a)]));
   if (Object.keys(collected).length) data.collected = Object.fromEntries(Object.entries(collected).map(([m, a]) => [m, inc(a)]));
+  if (Object.keys(paidOut).length) data.paidOut = Object.fromEntries(Object.entries(paidOut).map(([m, a]) => [m, inc(a)]));
   if (items.length) {
     data.items = {};
     for (const i of items) data.items[i.productId] = { q: increment(i.qty), rev: inc(i.rev) };

@@ -1,6 +1,7 @@
 rules_version = '2';
 
-// Dokan rules — step 6: profiles, shops, roles, invites, locations, catalogue, stock, buying, selling.
+// Dokan rules — complete (steps 1–11): profiles, shops, roles, invites, locations, catalogue, stock,
+// buying, selling, pricing, money, backups.
 // Every shop's data lives under shops/{shopId}; access needs an active member document there.
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -22,6 +23,14 @@ service cloud.firestore {
     // Owners, and managers allowed to see costs.
     function isCostManager(shopId) {
       return isManager(shopId) && (member(shopId).role == 'owner' || member(shopId).get('canSeeCosts', false) == true);
+    }
+
+    // During a restore, clear or shop deletion the owner sets shops/{id}.restoreUntil a few minutes
+    // ahead; until then the owner may rewrite any document of the shop, including history.
+    function restoring(shopId) {
+      return isOwner(shopId)
+        && get(shopPath(shopId)).data.get('restoreUntil', null) is timestamp
+        && get(shopPath(shopId)).data.restoreUntil > request.time;
     }
 
     // True while the shop is being created in this same batch by the current user.
@@ -83,8 +92,12 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.resource.data.ownerId == request.auth.uid
         && getAfter(memberPath(shopId)).data.role == 'owner';
-      allow update: if isOwner(shopId)
-        && request.resource.data.ownerId == resource.data.ownerId;
+      allow update: if (isOwner(shopId) && request.resource.data.ownerId == resource.data.ownerId)
+        // Managers save the day's USD rate into the settings, and nothing else.
+        || (isManager(shopId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['settings', 'updatedAt'])
+          && request.resource.data.settings.diff(resource.data.get('settings', {})).affectedKeys()
+               .hasOnly(['usdRate', 'rateDate', 'rateSource', 'rateManual']));
       allow delete: if isOwner(shopId);
 
       match /members/{uid} {
@@ -102,7 +115,9 @@ service cloud.firestore {
                .hasOnly(['role', 'branchIds', 'canSeeCosts', 'disabled', 'updatedAt'])
           && validAccess(request.resource.data)
           && request.resource.data.disabled is bool;
-        allow delete: if isOwner(shopId) && uid != request.auth.uid;
+        allow delete: if (isOwner(shopId) && uid != request.auth.uid)
+          // The owner's own membership is removed last, once the shop itself is deleted.
+          || (isMe(uid) && !exists(shopPath(shopId)));
       }
 
       match /invites/{code} {
@@ -291,8 +306,59 @@ service cloud.firestore {
         allow create, update: if isMember(shopId)
           && inMyLocations(shopId, [request.resource.data.locationId])
           && statId == request.resource.data.locationId + '_' + request.resource.data.date
-          && request.resource.data.keys().hasOnly(['locationId', 'date', 'sales', 'count', 'returns', 'credit', 'pay', 'collected', 'items', 'updatedAt']);
+          && request.resource.data.keys().hasOnly(['locationId', 'date', 'sales', 'count', 'returns', 'credit', 'expenses', 'pay', 'collected', 'paidOut', 'items', 'updatedAt']);
         allow delete: if false;
+      }
+      // USD rate history, one document per day.
+      match /fxRates/{date} {
+        allow read: if isMember(shopId);
+        allow create, update: if isManager(shopId)
+          && request.resource.data.date == date
+          && request.resource.data.rate is number && request.resource.data.rate > 0;
+        allow delete: if false;
+      }
+
+      // Expenses per branch: managers record them for their locations; only the owner deletes.
+      match /expenses/{expenseId} {
+        allow read: if isManager(shopId) && canSeeLocation(shopId, resource.data.locationId);
+        allow create: if isManager(shopId)
+          && request.resource.data.by == request.auth.uid
+          && inMyLocations(shopId, [request.resource.data.locationId])
+          && request.resource.data.amount is number && request.resource.data.amount > 0;
+        allow update: if false;
+        allow delete: if isOwner(shopId);
+      }
+
+      // Cash drawer per branch per day. Anyone at the branch opens and closes it;
+      // only owners and managers can reopen a closed day.
+      match /cashDays/{dayId} {
+        allow read: if isMember(shopId) && canSeeLocation(shopId, resource.data.locationId);
+        allow create: if isMember(shopId)
+          && inMyLocations(shopId, [request.resource.data.locationId])
+          && dayId == request.resource.data.locationId + '_' + request.resource.data.date
+          && request.resource.data.opening is number;
+        allow update: if isMember(shopId)
+          && inMyLocations(shopId, [resource.data.locationId])
+          && request.resource.data.locationId == resource.data.locationId
+          && request.resource.data.date == resource.data.date
+          && (resource.data.closedAt == null || isManager(shopId));
+        allow delete: if false;
+      }
+
+      // Cloud backups: owner only. The JSON is split over chunks/{n}.
+      match /backups/{backupId} {
+        allow read, write: if isOwner(shopId);
+        match /chunks/{chunkId} {
+          allow read, write: if isOwner(shopId);
+        }
+      }
+
+      // Restore window: the owner may rewrite anything in the shop for a few minutes.
+      match /{collectionName}/{docId} {
+        allow read, write: if restoring(shopId);
+      }
+      match /costs/{productId}/history/{historyId} {
+        allow read, write: if restoring(shopId);
       }
       // Collections not listed here are closed by default.
     }

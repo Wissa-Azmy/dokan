@@ -6,6 +6,11 @@ import { setDigits, getDigits } from './format.js';
 
 const root = document.getElementById('app');
 
+// Lets the app itself open without internet after the first visits (see sw.js).
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+
 if (!isConfigured) {
   root.replaceChildren(el('main', { class: 'page' }, el('div', { class: 'card hero' }, el('h2', {}, t('appName')), el('p', {}, t('notConfigured')))));
 } else {
@@ -29,6 +34,14 @@ async function start() {
   const { renderSell } = await import('./sell.js');
   const { renderSales, renderSale } = await import('./sales.js');
   const { renderCustomers, renderCustomer } = await import('./customers.js');
+  const { renderRate } = await import('./rates.js');
+  const { dailyRateCheck } = await import('./fx.js');
+  const { renderPrices } = await import('./prices.js');
+  const { renderSettings } = await import('./settings.js');
+  const { renderExpenses } = await import('./expenses.js');
+  const { renderCash } = await import('./cash.js');
+  const { renderDashboard } = await import('./dashboard.js');
+  const { renderBackup } = await import('./backup.js');
 
   // Listeners opened by screens for the shop being viewed; closed when leaving that shop.
   const live = new Map();
@@ -136,21 +149,33 @@ async function start() {
 
   const parseRoute = () => (location.hash || '#/shops').split('/').slice(1);
   const FORM_ROUTES = ['new-shop', 'prefs', 'join'];
-  const FORM_SUBS = ['product', 'purchase'];
+  const FORM_SUBS = ['product', 'purchase', 'prices', 'settings'];
   let formReady = false; // a shop form screen is drawn with all its data
+  let waiting = false; // a live update arrived while someone was typing
+
+  const typing = () => {
+    const a = document.activeElement;
+    return a && root.contains(a) && a.matches('input:not([type=checkbox]):not([type=radio]), textarea, select');
+  };
 
   // Live data updates redraw list screens only, so forms being typed into are never reset.
-  // A shop form still waiting for its data is redrawn until it's ready.
+  // A shop form still waiting for its data is redrawn until it's ready. While a field has focus,
+  // the redraw waits until it loses focus, so the phone keyboard doesn't close mid-number.
   function refresh() {
     const [route, , sub] = parseRoute();
     if (FORM_ROUTES.includes(route)) return;
     if (FORM_SUBS.includes(sub) && formReady) return;
+    if (typing()) { waiting = true; return; }
     render();
   }
+  root.addEventListener('focusout', () => {
+    setTimeout(() => { if (waiting && !typing()) { waiting = false; refresh(); } }, 0);
+  });
 
   function render() {
     const [route, id, sub, subId] = parseRoute();
     formReady = false;
+    waiting = false;
     if (!ctx.user) {
       // Keep an invite link through sign-in or sign-up.
       if (route === 'join' && id) sessionStorage.setItem('dokan.pendingInvite', id);
@@ -190,6 +215,21 @@ async function start() {
         formReady = renderProductForm(root, ctx, id, subId);
         return;
       }
+      const manager = usable && ['owner', 'manager'].includes(me.role);
+      if (usable && sub === 'rate' && manager) return renderRate(root, ctx, id);
+      if (usable && sub === 'prices' && isCostManager(me)) {
+        formReady = renderPrices(root, ctx, id);
+        return;
+      }
+      if (usable && sub === 'settings' && me.role === 'owner') {
+        formReady = renderSettings(root, ctx, id);
+        return;
+      }
+      if (usable && sub === 'backup' && me.role === 'owner') return renderBackup(root, ctx, id);
+      if (usable && sub === 'expenses' && manager) return renderExpenses(root, ctx, id);
+      if (usable && sub === 'cash') return renderCash(root, ctx, id);
+      if (usable && sub === 'dashboard' && manager) return renderDashboard(root, ctx, id);
+      if (usable) dailyRateCheck(ctx, id);
       return screens.renderShopHome(root, id);
     }
     return screens.renderShops(root);

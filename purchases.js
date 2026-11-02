@@ -114,7 +114,8 @@ export function renderPurchaseForm(root, ctx, shopId, purchaseId) {
   const lines = []; // { productId, qtyInput, costInput }
   const extras = []; // { labelInput, amountInput, onInvoiceInput, row }
   const productById = (id) => products.find((p) => p.id === id);
-  const lastRate = localStorage.getItem(`dokan.usdRate.${shopId}`) || ctx.shops.get(shopId)?.settings?.usdRate || '';
+  // The shop's rate of the day comes first; the last rate typed on this device is the fallback.
+  const lastRate = ctx.shops.get(shopId)?.settings?.usdRate || localStorage.getItem(`dokan.usdRate.${shopId}`) || '';
 
   const form = el('form', { class: 'form', novalidate: true });
   const linesBox = el('div', { class: 'list' });

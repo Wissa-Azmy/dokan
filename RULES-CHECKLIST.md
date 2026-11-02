@@ -93,3 +93,13 @@ Set up: C is an employee at Branch 1 only.
 - ⛔ C records an opening balance (kind `charge`) for a customer; only managers can.
 - ✅ C returns items from a Branch 1 sale; stock goes back up.
 - ⛔ Anyone deletes a `dailyStats` document, or writes one whose ID doesn't match its location and date.
+
+## Pricing, money and backups (steps 7–11)
+- ✅ B (manager) fetches the USD rate: `fxRates/{today}` and the shop's `settings.usdRate` update.
+- ⛔ B changes `settings.markupPct` or the shop name (Playground). Only the owner can.
+- ⛔ C (employee) writes to `fxRates`.
+- ✅ B records an expense at Branch 1. ⛔ C records an expense. ⛔ B deletes an expense (owner only).
+- ✅ C opens and closes the cash day at Branch 1. ⛔ C reopens it after closing. ✅ B reopens it.
+- ⛔ B or C read `backups`.
+- ⛔ A deletes a sale outside a restore. ✅ During a restore (`restoreUntil` in the future on the shop), A can; B still can't.
+- ✅ After A deletes the shop, nothing of it is left, and it disappears from B's and C's shop lists.

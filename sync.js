@@ -43,6 +43,11 @@ export function saveShopSetting(shopId, key, value) {
   return updateDoc(doc(db, 'shops', shopId), { [`settings.${key}`]: value, updatedAt: serverTimestamp() });
 }
 
+// Saves one top-level shop field, e.g. its name.
+export function saveShopField(shopId, key, value) {
+  return updateDoc(doc(db, 'shops', shopId), { [key]: value, updatedAt: serverTimestamp() });
+}
+
 // Watches a shop the user belongs to. If the server refuses and the membership is really gone
 // (removed, not just disabled), the shop is dropped from the user's list.
 export function watchShop(uid, shopId, onData) {
