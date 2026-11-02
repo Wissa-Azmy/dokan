@@ -33,7 +33,7 @@ Live: https://wissa-azmy.github.io/dokan/
 | `purchases.js` | Purchase list, invoice / goods-receipt form, adding prices, view |
 | `selling.js` | Sales, returns, customer payments and day totals (one batch each) |
 | `sell.js` | The selling screen: cart, scanning, checkout with split and down payments |
-| `scanner.js` | Camera barcode scanning (html5-qrcode, loaded on first use) |
+| `scanner.js` | Camera barcode scanning: the browser's own reader, or ZXing (loaded on first use); flashlight, scan cards, typed fallback |
 | `barcode.js` | Shop barcodes (EAN-13 starting with 20) and drawing EAN-13 / Code 128 as SVG |
 | `labels.js` | Barcodes & stickers: generate missing barcodes, print stickers, barcode reader help and test |
 | `receipt.js` | Receipt on screen, WhatsApp / share text, 58 or 80 mm printing; shared print helper |
@@ -134,7 +134,7 @@ A barcode reader acts as a keyboard: it types the code and presses **Enter**. Do
 - **Sell:** the product is added to the cart, even if the search box isn't selected.
 - **Stock count and purchases:** use the search box.
 - **Barcodes & stickers:** scanning adds a sticker for that product.
-- **Without a reader:** use the camera button on the Sell screen.
+- **Without a reader:** use the camera scan button (barcode icon) on the Sell screen. It shows a frame to hold the barcode in, a flashlight button where the phone has one, a card for each scan with how many are in the sale, and a box to type the number.
 
 **If it doesn't work:**
 - **Keyboard language:** the device's keyboard must be set to **English**. If Arabic letters appear instead of numbers, that's the cause.

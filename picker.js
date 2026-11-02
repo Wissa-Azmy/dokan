@@ -8,9 +8,14 @@ const MAX_RESULTS = 8;
 
 const haystack = (p) => normalize(`${p.nameAr} ${p.nameEn} ${p.brand} ${p.barcode} ${p.sku}`);
 
+// A 12-digit UPC-A is the same product as the EAN-13 with a leading 0; cameras may report either.
 export function findByCode(products, code) {
   const c = normalize(code);
-  return c ? (products || []).find((p) => p.active !== false && (normalize(p.barcode) === c || normalize(p.sku) === c)) : null;
+  if (!c) return null;
+  const alts = new Set([c]);
+  if (/^\d{12}$/.test(c)) alts.add(`0${c}`);
+  if (/^0\d{12}$/.test(c)) alts.add(c.slice(1));
+  return (products || []).find((p) => p.active !== false && (alts.has(normalize(p.barcode)) || alts.has(normalize(p.sku)))) || null;
 }
 
 // getProducts() returns the current product list; onPick(product, { scanned }) is called on a pick.

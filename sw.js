@@ -2,7 +2,7 @@
 // shows up on the next reload) with the cached copy as the offline fallback. Firebase SDK files
 // and fonts are versioned, so they're served from the cache once fetched.
 // Firestore traffic and the dollar-rate APIs are never touched here.
-const CACHE = 'dokan-v3';
+const CACHE = 'dokan-v4';
 
 const APP_FILES = [
   './', './index.html', './style.css', './manifest.webmanifest', './icon.svg',
@@ -18,7 +18,7 @@ const isLibrary = (url) =>
   (url.hostname === 'www.gstatic.com' && url.pathname.startsWith('/firebasejs/'))
   || url.hostname === 'fonts.googleapis.com'
   || url.hostname === 'fonts.gstatic.com'
-  || (url.hostname === 'unpkg.com' && url.pathname.startsWith('/html5-qrcode@'));
+  || (url.hostname === 'cdn.jsdelivr.net' && url.pathname.startsWith('/npm/@zxing/'));
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

@@ -48,11 +48,14 @@ export function renderSell(root, ctx, shopId) {
   const locWrap = el('span', { class: 'select-wrap' }, locSelect);
 
   const picker = productPicker({ getProducts: () => cur.products, onPick: (p) => add(p), placeholder: t('addToShelf') });
-  const camBtn = iconButton('camera', t('scanTitle'), () => scanDialog((code) => {
+  // Each scan adds one piece; the card shows how many of it are in this sale now.
+  const camBtn = iconButton('scan', t('scanTitle'), () => scanDialog((code) => {
     const p = findByCode(cur.products, code);
-    if (!p) return t('codeNotFound', { code });
-    return add(p) ? `✓ ${localName(p)}` : localName(p);
-  }), 'big');
+    if (!p) return { kind: 'warn', name: code, note: t('codeNotFound', { code }) };
+    if (!add(p)) return { kind: 'warn', name: localName(p), meta: p.brand, note: t('noPriceAsk') };
+    const qty = cart.lines.find((l) => l.productId === p.id)?.qty || 1;
+    return { kind: 'ok', name: localName(p), meta: p.brand, n: fmtNum(qty), unit: t('inThisSale') };
+  }, { title: t('scanProducts') }), 'big');
 
   const linesBox = el('div', { class: 'cart' });
   const totalEl = el('strong', { class: 'cart-total' });
