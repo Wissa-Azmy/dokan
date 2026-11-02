@@ -30,7 +30,7 @@ export function langSwitch(rerender) {
       if (ctx?.user) saveProfileField(ctx.user.uid, 'lang', next).catch(() => {});
       rerender();
     },
-  }, icon('globe'), next === 'ar' ? 'عربي' : 'English');
+  }, icon('globe'), next === 'ar' ? 'العربية' : 'English');
 }
 
 const tile = (href, iconName, label) => el('a', { class: 'card tile', href }, el('span', { class: 'tile-icon' }, icon(iconName)), el('span', { class: 'tile-label' }, label), el('span', { class: 'tile-go flip' }, icon('chevron')));
@@ -48,7 +48,6 @@ export function header(title, { back } = {}) {
     el('div', { class: 'topbar-actions' },
       langSwitch(() => ctx.rerender()),
       iconButton('user', t('preferences'), () => ctx.go('#/prefs')),
-      el('span', { class: 'version-tag in-bar', title: t('appVersion') }, `v${APP_VERSION}`),
     ),
   );
 }
@@ -183,7 +182,7 @@ export function renderPrefs(root) {
     header(t('preferences'), { back: '#/shops' }),
     el('main', { class: 'page' },
       form,
-      el('p', { class: 'muted small center' }, digitsOf('1234567890')),
+      el('p', { class: 'muted small center' }, `${t('appVersion')}: `, el('span', { dir: 'ltr' }, `v${digitsOf(APP_VERSION)}`)),
       el('button', { type: 'button', class: 'btn ghost danger-text', onclick: () => signOut(auth) }, icon('logout'), t('signOut')),
     ),
   );
