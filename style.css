@@ -445,7 +445,14 @@ input[readonly] { background: #f5efe5; color: var(--muted); }
 .loading-slow p { margin: 0; color: var(--muted); }
 .version-tag { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; direction: ltr; }
 .loading-view > .version-tag { position: absolute; top: calc(8px + env(safe-area-inset-top)); inset-inline-end: 12px; }
-.topbar .version-tag.corner { position: absolute; top: calc(1px + env(safe-area-inset-top)); inset-inline-end: 10px; font-size: 10px; opacity: 0.8; }
+/* In the header: a small pill at the end of the action buttons, on the same line, clear of the status bar. */
+.topbar-actions { align-items: center; }
+.version-tag.in-bar {
+  display: inline-flex; align-items: center; height: 22px; padding: 0 7px;
+  border: 1px solid var(--line); border-radius: 999px; background: var(--paper);
+  font-size: 10px; font-weight: 700; line-height: 1; white-space: nowrap;
+}
+@media (max-width: 360px) { .version-tag.in-bar { padding: 0 5px; font-size: 9px; } }
 .auth-top { align-items: center; justify-content: space-between; }
 .update-banner {
   position: fixed; z-index: 60; inset-inline: 12px; top: calc(10px + env(safe-area-inset-top));

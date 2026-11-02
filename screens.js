@@ -43,12 +43,12 @@ export const skeletonCard = () => el('div', { class: 'card sk-card', 'aria-hidde
 
 export function header(title, { back } = {}) {
   return el('header', { class: 'topbar' },
-    el('span', { class: 'version-tag corner' }, `v${APP_VERSION}`),
     back ? iconButton('back', t('myShops'), () => ctx.go(back), 'flip') : brand(),
     el('h1', { class: 'topbar-title' }, title || ''),
     el('div', { class: 'topbar-actions' },
       langSwitch(() => ctx.rerender()),
       iconButton('user', t('preferences'), () => ctx.go('#/prefs')),
+      el('span', { class: 'version-tag in-bar', title: t('appVersion') }, `v${APP_VERSION}`),
     ),
   );
 }
