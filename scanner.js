@@ -84,7 +84,6 @@ export function scanDialog(onCode, { title = t('scanTitle') } = {}) {
 
   let stream = null;
   let timer = 0;
-  let controls = null;
   let last = '';
   let pausedUntil = 0;
   let torchOn = false;
@@ -123,11 +122,12 @@ export function scanDialog(onCode, { title = t('scanTitle') } = {}) {
     if (isTouch()) typed.blur();
   }
 
-  // A code counts once it is read twice in a row (and passes its check digit).
+  // EAN/UPC codes carry a check digit, so one good read is enough. Other codes (Code 128 shop
+  // stickers with letters, for example) must read the same twice in a row.
   function hit(raw) {
     const code = String(raw || '').trim();
     if (!code || !checkDigitOk(code) || Date.now() < pausedUntil) return;
-    if (last === code) accept(code); else last = code;
+    if (/^\d{8}$|^\d{12,13}$/.test(code) || last === code) accept(code); else last = code;
   }
 
   async function start() {
@@ -149,32 +149,60 @@ export function scanDialog(onCode, { title = t('scanTitle') } = {}) {
     if (caps.torch) torchBtn.hidden = false;
     msg(t('scanHold'));
 
-    let formats = [];
-    if ('BarcodeDetector' in window) formats = await window.BarcodeDetector.getSupportedFormats().catch(() => []);
-    if (formats.includes('ean_13')) {
-      const detector = new window.BarcodeDetector({ formats: DETECTOR_FORMATS.filter((f) => formats.includes(f)) });
-      const tick = async () => {
-        if (stream !== s) return;
-        try {
-          if (video.readyState >= 2) {
-            const found = await detector.detect(video);
-            if (found[0]) hit(found[0].rawValue);
-          }
-        } catch { /* try the next frame */ }
-        if (stream === s) timer = setTimeout(tick, 120);
-      };
-      tick();
-      return;
+    // Both readers look at frames taken from the video by this loop, so nothing depends on a
+    // library taking over the camera. If the browser's reader keeps failing, ZXing takes over.
+    let detector = null;
+    let zx = null;
+    let fails = 0;
+    const canvas = document.createElement('canvas');
+    const cx = canvas.getContext('2d', { willReadFrequently: true });
+
+    if ('BarcodeDetector' in window) {
+      const formats = await window.BarcodeDetector.getSupportedFormats().catch(() => []);
+      if (formats.includes('ean_13')) {
+        try { detector = new window.BarcodeDetector({ formats: DETECTOR_FORMATS.filter((f) => formats.includes(f)) }); } catch { detector = null; }
+      }
     }
-    try { await loadZXing(); } catch { return msg(t('scannerLoadFailed')); }
+    async function useZXing() {
+      detector = null;
+      try { await loadZXing(); } catch { msg(t('scannerLoadFailed')); return false; }
+      zx = new window.ZXingBrowser.BrowserMultiFormatOneDReader();
+      return true;
+    }
+    if (!detector && !(await useZXing())) return;
     if (stream !== s) return;
-    try {
-      const reader = new window.ZXingBrowser.BrowserMultiFormatOneDReader();
-      controls = await reader.decodeFromStream(s, video, (r) => r && hit(r.getText()));
-      if (stream !== s) { controls.stop(); controls = null; }
-    } catch {
-      msg(t('cameraError'));
+
+    // The frame scaled to at most 1280 px wide: enough detail for 1D codes, quick to read.
+    function frame() {
+      const vw = video.videoWidth;
+      const vh = video.videoHeight;
+      const k = Math.min(1, 1280 / vw);
+      canvas.width = Math.round(vw * k);
+      canvas.height = Math.round(vh * k);
+      cx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      return canvas;
     }
+
+    const tick = async () => {
+      if (stream !== s) return;
+      if (video.readyState >= 2 && video.videoWidth) {
+        if (detector) {
+          try {
+            const found = await detector.detect(video);
+            fails = 0;
+            if (found[0]) hit(found[0].rawValue);
+          } catch {
+            if (++fails > 15 && !(await useZXing())) return;
+          }
+        } else if (zx) {
+          let text = '';
+          try { text = zx.decodeFromCanvas(frame()).getText(); } catch { /* no code in this frame */ }
+          if (text) hit(text);
+        }
+      }
+      if (stream === s) timer = setTimeout(tick, detector ? 120 : 160);
+    };
+    tick();
   }
 
   torchBtn.addEventListener('click', () => {
@@ -189,8 +217,6 @@ export function scanDialog(onCode, { title = t('scanTitle') } = {}) {
   dialog.addEventListener('close', () => {
     closed = true;
     clearTimeout(timer);
-    try { controls?.stop(); } catch { /* already stopped */ }
-    controls = null;
     stream?.getTracks().forEach((tr) => tr.stop());
     stream = null;
   });
