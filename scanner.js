@@ -23,7 +23,7 @@ function loadZXing() {
   return loading;
 }
 
-// Numeric retail codes carry a check digit: a misread fails it and is ignored.
+// True when a number's last digit is the right EAN/UPC check digit for the rest.
 function checkDigitOk(c) {
   if (!/^\d+$/.test(c)) return true;
   if (![8, 12, 13, 14].includes(c.length)) return true;
@@ -69,7 +69,6 @@ export function scanDialog(onCode, { title = t('scanTitle') } = {}) {
       e.preventDefault();
       const code = typed.value.trim();
       if (!code) return;
-      if (!checkDigitOk(code)) return msg(t('badTypedCode'));
       accept(code);
     });
     body.append(
@@ -122,12 +121,14 @@ export function scanDialog(onCode, { title = t('scanTitle') } = {}) {
     if (isTouch()) typed.blur();
   }
 
-  // EAN/UPC codes carry a check digit, so one good read is enough. Other codes (Code 128 shop
-  // stickers with letters, for example) must read the same twice in a row.
+  // A code with a valid EAN/UPC check digit counts on the first read. Anything else (Code 128,
+  // or a number whose last digit isn't an EAN/UPC check digit) counts once it reads the same
+  // twice in a row, which filters out misreads without refusing such codes.
   function hit(raw) {
     const code = String(raw || '').trim();
-    if (!code || !checkDigitOk(code) || Date.now() < pausedUntil) return;
-    if (/^\d{8}$|^\d{12,13}$/.test(code) || last === code) accept(code); else last = code;
+    if (!code || Date.now() < pausedUntil) return;
+    const retail = /^\d{8}$|^\d{12,13}$/.test(code) && checkDigitOk(code);
+    if (retail || last === code) accept(code); else last = code;
   }
 
   async function start() {
