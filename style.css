@@ -358,9 +358,7 @@ input[readonly] { background: #f5efe5; color: var(--muted); }
   position: absolute; bottom: 10px; inset-inline-end: 10px; width: 44px; height: 44px; border-radius: 50%;
   display: grid; place-items: center; border: 0; background: rgba(0, 0, 0, 0.55); color: #fff; cursor: pointer;
 }
-.scan-torch .icon { width: 24px; height: 24px; }
-.scan-torch.on { background: #fff; color: #000; box-shadow: 0 0 14px rgba(255, 255, 255, 0.8); }
-.scan-torch.off { opacity: 0.45; }
+.scan-torch.on { background: #fff; color: #000; }
 .scan-torch[hidden] { display: none; }
 .scan-log { display: grid; gap: 6px; }
 .scan-log:empty { display: none; }

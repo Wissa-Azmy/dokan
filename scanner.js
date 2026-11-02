@@ -144,9 +144,9 @@ export function scanDialog(onCode, { title = t('scanTitle') } = {}) {
     stream = s;
     video.srcObject = s;
     video.play().catch(() => {});
-    // Always shown once the camera runs; some phones only report the flashlight after the
-    // first frames, and the tap tells the user if this one has none.
-    torchBtn.hidden = false;
+    const track = s.getVideoTracks()[0];
+    const caps = track?.getCapabilities ? track.getCapabilities() : {};
+    if (caps.torch) torchBtn.hidden = false;
     msg(t('scanHold'));
 
     let formats = [];
@@ -177,20 +177,11 @@ export function scanDialog(onCode, { title = t('scanTitle') } = {}) {
     }
   }
 
-  torchBtn.addEventListener('click', async () => {
+  torchBtn.addEventListener('click', () => {
     const track = stream?.getVideoTracks()[0];
     if (!track) return;
-    const caps = track.getCapabilities ? track.getCapabilities() : {};
-    const next = !torchOn;
-    try {
-      if (!caps.torch) throw new Error('no-torch');
-      await track.applyConstraints({ advanced: [{ torch: next }] });
-    } catch {
-      torchBtn.classList.add('off');
-      msg(t('noFlashlight'));
-      return;
-    }
-    torchOn = next;
+    torchOn = !torchOn;
+    track.applyConstraints({ advanced: [{ torch: torchOn }] }).catch(() => {});
     torchBtn.classList.toggle('on', torchOn);
     torchBtn.setAttribute('aria-pressed', String(torchOn));
   });
