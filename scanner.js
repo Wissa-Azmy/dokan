@@ -92,19 +92,24 @@ export function scanDialog(onCode, { title = t('scanTitle') } = {}) {
 
   function msg(text) { status.textContent = text; }
 
+  // One row per product: scanning it again replaces its row and moves it to the top.
   function show(r) {
     if (!r) return;
     if (typeof r !== 'object') { msg(r); return; }
+    const key = String(r.key ?? r.name);
     log.querySelector('.slog.new')?.classList.remove('new');
+    [...log.children].find((x) => x.dataset.key === key)?.remove();
     const meta = [r.meta, r.note].filter(Boolean);
-    log.prepend(el('div', { class: `slog ${r.kind === 'warn' ? 'warn' : 'ok'} new` },
+    const row = el('div', { class: `slog ${r.kind === 'warn' ? 'warn' : 'ok'} new` },
       el('span', { class: 'sic', 'aria-hidden': 'true' }, r.kind === 'warn' ? '!' : '✓'),
       el('span', { class: 'sx' },
         el('strong', { dir: 'auto' }, r.name),
         meta.length ? el('span', { class: 'sm', dir: 'auto' }, meta.join(' · ')) : null,
       ),
       r.n != null ? el('span', { class: 'sn' }, el('strong', {}, String(r.n)), r.unit ? el('small', {}, r.unit) : null) : null,
-    ));
+    );
+    row.dataset.key = key;
+    log.prepend(row);
     [...log.children].slice(LOG_SIZE).forEach((x) => x.remove());
     msg(t('scanHold'));
   }

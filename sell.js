@@ -51,10 +51,10 @@ export function renderSell(root, ctx, shopId) {
   // Each scan adds one piece; the card shows how many of it are in this sale now.
   const camBtn = iconButton('scan', t('scanTitle'), () => scanDialog((code) => {
     const p = findByCode(cur.products, code);
-    if (!p) return { kind: 'warn', name: code, note: t('codeNotFound', { code }) };
-    if (!add(p)) return { kind: 'warn', name: localName(p), meta: p.brand, note: t('noPriceAsk') };
+    if (!p) return { kind: 'warn', key: code, name: code, note: t('codeNotFound', { code }) };
+    if (!add(p)) return { kind: 'warn', key: p.id, name: localName(p), meta: p.brand, note: t('noPriceAsk') };
     const qty = cart.lines.find((l) => l.productId === p.id)?.qty || 1;
-    return { kind: 'ok', name: localName(p), meta: p.brand, n: fmtNum(qty), unit: t('inThisSale') };
+    return { kind: 'ok', key: p.id, name: localName(p), meta: p.brand, n: fmtNum(qty), unit: t('inThisSale') };
   }, { title: t('scanProducts') }), 'big');
 
   const linesBox = el('div', { class: 'cart' });
