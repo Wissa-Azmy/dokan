@@ -8,7 +8,7 @@ import { header } from './screens.js';
 import { useProducts } from './products.js';
 import { useLocations } from './locations.js';
 import { useStock, stockMap, myLocations } from './stock.js';
-import { productPicker, findByCode } from './picker.js';
+import { productPicker, findByCode, listenForScanner } from './picker.js';
 import { scanDialog } from './scanner.js';
 import { useCustomers, useCustomerAccounts, customerBalance, pickCustomerDialog } from './customers.js';
 import { receiptDialog } from './receipt.js';
@@ -282,5 +282,10 @@ export function renderSell(root, ctx, shopId) {
   }
   view = { shopId, look, page, update };
   update(data);
+  listenForScanner(page, (code) => {
+    const p = findByCode(cur.products, code);
+    if (!p) return toast(t('codeNotFound', { code }), 'error');
+    if (add(p)) toast(`✓ ${localName(p)}`);
+  });
   if (!isTouch()) page.querySelector('.picker input')?.focus();
 }

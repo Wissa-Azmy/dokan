@@ -11,6 +11,7 @@ import { header } from './screens.js';
 import { useCategories, categoryPath, categoryOptions } from './categories.js';
 import { useLocations } from './locations.js';
 import { hasHistory } from './movements.js';
+import { newShopBarcode } from './barcode.js';
 
 const MAX_ROWS = 100;
 const ARCHIVED = '__archived';
@@ -89,6 +90,7 @@ export function renderProducts(root, ctx, shopId) {
     ),
     list,
     footer,
+    el('a', { class: 'btn ghost', href: `#/shop/${shopId}/labels` }, icon('barcode'), t('barcodesStickers')),
     canEdit ? el('a', { class: 'btn primary fab', href: `#/shop/${shopId}/product/new` }, icon('plus'), t('addProduct')) : null,
   );
   root.replaceChildren(header(t('products'), { back: `#/shop/${shopId}` }), page);
@@ -173,6 +175,18 @@ export function renderProductForm(root, ctx, shopId, productId) {
   const locs = locations.filter((l) => l.active !== false || low[l.id] != null);
   const numText = (n) => (n != null ? String(n) : '');
 
+  // Fills the barcode field with a new shop code; asks first if it already has one.
+  async function generate() {
+    const input = form.elements.barcode;
+    if (input.value.trim()) {
+      const yes = await confirmAction({ title: t('generateBarcode'), message: t('replaceBarcodeMsg'), confirmLabel: t('generateBarcode') });
+      if (!yes) return;
+    }
+    const taken = new Set(products.filter((x) => x.id !== p?.id).flatMap((x) => [normalize(x.barcode), normalize(x.sku)]).filter(Boolean));
+    input.value = newShopBarcode(taken);
+    setFieldError(form, 'barcode', '');
+  }
+
   const form = el('form', { class: 'form', novalidate: true },
     el('section', { class: 'card form' },
       el('h2', { class: 'section-title' }, t('details')),
@@ -182,6 +196,10 @@ export function renderProductForm(root, ctx, shopId, productId) {
       textField({ name: 'brand', label: t('brand'), value: p?.brand || '' }),
       selectField({ name: 'unit', label: t('unit'), value: p?.unit || 'piece', options: unitOptions() }),
       textField({ name: 'barcode', label: t('barcode'), value: p?.barcode || '', hint: t('barcodeHint'), dir: 'ltr', autocomplete: 'off' }),
+      el('div', { class: 'field-buttons' },
+        el('button', { type: 'button', class: 'btn ghost small', onclick: () => generate() }, icon('barcode'), t('generateBarcode')),
+        p?.barcode ? el('a', { class: 'btn ghost small', href: `#/shop/${shopId}/labels/${p.id}` }, icon('print'), t('printStickers')) : null,
+      ),
       textField({ name: 'sku', label: t('sku'), value: p?.sku || '', dir: 'ltr', autocomplete: 'off' }),
     ),
     el('section', { class: 'card form' },

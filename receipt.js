@@ -62,15 +62,27 @@ export function receiptText(sale, { shop, location, products, customer }) {
   return rows.filter((r) => r !== null).join('\n');
 }
 
-export function printReceipt(node) {
+// Prints only `node`. pageCss sets the paper, e.g. "@page { size: 40mm 30mm; margin: 0; }" for
+// stickers; receipts leave it empty and use the default in style.css.
+export function printNode(node, className, pageCss = '') {
   let area = document.getElementById('print-area');
   if (!area) {
     area = el('div', { id: 'print-area' });
     document.body.append(area);
   }
-  area.className = `print-${getPrintWidth()}`;
+  let page = document.getElementById('print-page');
+  if (!page) {
+    page = el('style', { id: 'print-page' });
+    document.head.append(page);
+  }
+  page.textContent = pageCss;
+  area.className = className;
   area.replaceChildren(node.cloneNode(true));
   window.print();
+}
+
+export function printReceipt(node) {
+  printNode(node, `print-${getPrintWidth()}`);
 }
 
 // Shows the receipt with Share, WhatsApp and Print. extra: more buttons, e.g. "New sale".

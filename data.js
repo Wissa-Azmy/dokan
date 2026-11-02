@@ -201,6 +201,20 @@ export function saveProduct(shopId, id, p) {
   return { id: ref.id, done: setDoc(ref, { ...data, createdAt: serverTimestamp() }) };
 }
 
+// Gives products new barcodes in batches: [{ id, barcode }]. Works offline; the promise
+// resolves once the server has them.
+export function setBarcodes(shopId, items) {
+  const jobs = [];
+  for (let i = 0; i < items.length; i += 400) {
+    const batch = writeBatch(db);
+    for (const { id, barcode } of items.slice(i, i + 400)) {
+      batch.update(doc(db, 'shops', shopId, 'products', id), { barcode, updatedAt: serverTimestamp() });
+    }
+    jobs.push(batch.commit());
+  }
+  return Promise.all(jobs);
+}
+
 export function setProductActive(shopId, id, active) {
   return updateDoc(doc(db, 'shops', shopId, 'products', id), { active, updatedAt: serverTimestamp() });
 }

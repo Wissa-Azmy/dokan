@@ -147,6 +147,7 @@ export function renderShopHome(root, shopId) {
       usable ? group(t('groupStock'),
         tile(`#/shop/${shopId}/products`, 'box', t('products')),
         tile(`#/shop/${shopId}/stock`, 'store', t('stock')),
+        tile(`#/shop/${shopId}/labels`, 'barcode', t('barcodesStickers')),
         tile(`#/shop/${shopId}/purchases`, 'truck', costs ? t('purchases') : t('receiveGoods')),
         manager ? tile(`#/shop/${shopId}/suppliers`, 'team', t('suppliers')) : null,
         costs ? tile(`#/shop/${shopId}/prices`, 'tag', t('priceCheck')) : null,

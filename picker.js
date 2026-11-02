@@ -46,3 +46,26 @@ export function productPicker({ getProducts, onPick, placeholder = t('addToShelf
 
   return { element: el('div', { class: 'picker' }, el('label', { class: 'search-box' }, icon('search'), input), results), clear };
 }
+
+// Catches a barcode reader even when no field has focus: readers type much faster than people
+// and end with Enter. Stops by itself once `page` leaves the screen.
+const SCAN_KEY_GAP = 60; // ms; people type slower than this
+export function listenForScanner(page, onCode) {
+  let buffer = '';
+  let lastAt = 0;
+  function onKey(e) {
+    if (!document.contains(page)) { document.removeEventListener('keydown', onKey, true); return; }
+    const target = e.target;
+    if (target.closest?.('input, textarea, select, [contenteditable]') || document.querySelector('dialog[open]')) return;
+    const now = Date.now();
+    if (now - lastAt > SCAN_KEY_GAP) buffer = '';
+    lastAt = now;
+    if (e.key === 'Enter') {
+      if (buffer.length >= 4) { e.preventDefault(); onCode(buffer); }
+      buffer = '';
+    } else if (e.key.length === 1) {
+      buffer += e.key;
+    }
+  }
+  document.addEventListener('keydown', onKey, true);
+}

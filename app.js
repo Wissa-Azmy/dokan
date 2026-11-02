@@ -47,6 +47,7 @@ async function start() {
   const { renderCash } = await import('./cash.js');
   const { renderDashboard } = await import('./dashboard.js');
   const { renderBackup } = await import('./backup.js');
+  const { renderLabels } = await import('./labels.js');
 
   // Listeners opened by screens for the shop being viewed; closed when leaving that shop.
   const live = new Map();
@@ -221,6 +222,7 @@ async function start() {
       if (usable && sub === 'customers') return renderCustomers(root, ctx, id);
       if (usable && sub === 'customer' && subId) return renderCustomer(root, ctx, id, subId);
       if (usable && sub === 'products') return renderProducts(root, ctx, id);
+      if (usable && sub === 'labels') return renderLabels(root, ctx, id, subId || null);
       if (usable && sub === 'categories') return renderCategories(root, ctx, id);
       if (usable && sub === 'stock') return renderStock(root, ctx, id);
       if (usable && sub === 'count' && ['owner', 'manager'].includes(me.role)) return renderCount(root, ctx, id);

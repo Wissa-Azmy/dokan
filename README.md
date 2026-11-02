@@ -34,7 +34,9 @@ Live: https://wissa-azmy.github.io/dokan/
 | `selling.js` | Sales, returns, customer payments and day totals (one batch each) |
 | `sell.js` | The selling screen: cart, scanning, checkout with split and down payments |
 | `scanner.js` | Camera barcode scanning (html5-qrcode, loaded on first use) |
-| `receipt.js` | Receipt on screen, WhatsApp / share text, 58 or 80 mm printing |
+| `barcode.js` | Shop barcodes (EAN-13 starting with 20) and drawing EAN-13 / Code 128 as SVG |
+| `labels.js` | Barcodes & stickers: generate missing barcodes, print stickers, barcode reader help and test |
+| `receipt.js` | Receipt on screen, WhatsApp / share text, 58 or 80 mm printing; shared print helper |
 | `sales.js` | Sales per day and branch, one sale, returns |
 | `customers.js` | Customers, credit balances, statements, payments received |
 | `pricing.js` | Suggested price formula (dollar pass-through, markup, rounding) and the worked example |
@@ -84,6 +86,61 @@ Live: https://wissa-azmy.github.io/dokan/
 - **Data:** Firestore keeps a copy on each device. Selling, receiving goods, adjustments, expenses and the cash drawer all work offline and sync when the internet is back.
 - **The app itself:** `sw.js` keeps the app files, the Firebase SDK and the font on the device. After the app has been opened online twice, it opens without internet too. App files always load fresh when online, so a new push shows on the next reload.
 - **Needs internet:** joining a shop, creating invites, costing a purchase, deleting things with history, exports, backup and restore.
+
+## Barcodes, stickers and barcode readers
+
+### Shop barcodes
+
+Products without a factory barcode can get one made by the shop:
+
+- **One product:** in the product form, tap **Generate barcode**, then **Save**.
+- **All at once:** Products → **Barcodes & stickers** → **Generate barcodes for N products**. Only products with no barcode get one; existing barcodes never change.
+
+Shop barcodes are EAN-13 codes starting with **20**. GS1 keeps the 20–29 range for in-store use, so a shop code never clashes with a factory barcode. Every reader and phone camera reads EAN-13. Each shop makes its own codes and checks them against its own products. Generating works offline. Owners and managers can generate; everyone can print.
+
+### Printing stickers
+
+Products → **Barcodes & stickers** (also on the shop home, or **Print stickers** in a product's form):
+
+1. Choose the **sticker size**: a label roll (40 × 30, 50 × 30 or 58 × 40 mm, one sticker per label) or an **A4 sheet** of 3 × 8 stickers (70 × 37 mm). The size and the price setting are remembered on each device.
+2. Turn **Show the price** on or off. The sticker always shows the product name and the barcode with its number underneath.
+3. Set how many stickers each product needs (− / +, **One of each shown**, or scan a product with a reader to add one).
+4. Tap **Print**. In the print window, pick the printer, set **margins to None**, **scale 100 %**, and turn off **headers and footers**.
+
+Codes that are not a valid EAN-13 (for example a 12-digit UPC or a code with English letters) are printed as **Code 128**, which scans back exactly as stored. Codes with Arabic letters can't be printed as a barcode.
+
+**Printers:**
+- **Thermal label printer:** for example Xprinter XP-365B or XP-370B, or a TSC or Zebra desktop model. Install its driver, then set the paper size in the driver to the label size (for example 40 × 30 mm).
+- **A4 sticker sheets:** any ordinary printer. Check the first page on plain paper, because printers can't print right to the edge.
+
+### Connecting a barcode reader
+
+A barcode reader acts as a keyboard: it types the code and presses **Enter**. Dokan needs no driver or app for it.
+
+| Device | How |
+|---|---|
+| Windows / Mac computer | Plug in the USB reader (or the USB dongle of a wireless one) and wait a few seconds. |
+| Android | Bluetooth (below), or a wired reader through a USB-C OTG adapter. |
+| iPhone / iPad | Bluetooth (below). |
+
+**Bluetooth:**
+1. Put the reader in **Bluetooth HID** (keyboard) mode by scanning the setup code in its manual.
+2. Pair it in the phone's Bluetooth settings.
+3. While it is connected, the on-screen keyboard may hide:
+   - **iPhone:** double-press the reader's button, or scan the "iOS keyboard toggle" code in the manual.
+   - **Android:** turn on "Show on-screen keyboard" under Settings → System → Keyboard → Physical keyboard.
+
+**Where scanning works:**
+- **Sell:** the product is added to the cart, even if the search box isn't selected.
+- **Stock count and purchases:** use the search box.
+- **Barcodes & stickers:** scanning adds a sticker for that product.
+- **Without a reader:** use the camera button on the Sell screen.
+
+**If it doesn't work:**
+- **Keyboard language:** the device's keyboard must be set to **English**. If Arabic letters appear instead of numbers, that's the cause.
+- **Enter after each code:** the reader must add **Enter** after the code (the factory default on most readers).
+- **Test box:** Barcodes & stickers → **How to connect a barcode reader** → **Test the reader** shows exactly what the reader typed and which product it matches.
+- **Reading from a screen:** a 2D (imager) reader can also read codes shown on a phone screen; a 1D laser reader can't.
 
 ## Rules tests (optional)
 
