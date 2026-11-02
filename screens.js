@@ -41,13 +41,21 @@ export const skeletonCard = () => el('div', { class: 'card sk-card', 'aria-hidde
   el('span', { class: 'sk-lines' }, el('span', { class: 'sk sk-line w70' }), el('span', { class: 'sk sk-line w40' })),
 );
 
+// Preferences remembers the screen it was opened from, so Back returns there (kept per tab,
+// so it survives a reload of the preferences page).
+const PREFS_FROM = 'dokan.prefsFrom';
+function openPrefs() {
+  if (location.hash !== '#/prefs') sessionStorage.setItem(PREFS_FROM, location.hash || '#/shops');
+  ctx.go('#/prefs');
+}
+
 export function header(title, { back } = {}) {
   return el('header', { class: 'topbar' },
-    back ? iconButton('back', t('myShops'), () => ctx.go(back), 'flip') : brand(),
+    back ? iconButton('back', t('back'), () => ctx.go(back), 'flip') : brand(),
     el('h1', { class: 'topbar-title' }, title || ''),
     el('div', { class: 'topbar-actions' },
       langSwitch(() => ctx.rerender()),
-      iconButton('user', t('preferences'), () => ctx.go('#/prefs')),
+      iconButton('user', t('preferences'), openPrefs),
     ),
   );
 }
@@ -180,7 +188,7 @@ export function renderPrefs(root) {
   form.elements.digits.addEventListener('change', (e) => { setDigits(e.target.value); save('digits', e.target.value); ctx.rerender(); });
 
   root.replaceChildren(
-    header(t('preferences'), { back: '#/shops' }),
+    header(t('preferences'), { back: sessionStorage.getItem(PREFS_FROM) || '#/shops' }),
     el('main', { class: 'page' },
       form,
       el('p', { class: 'muted small center' }, `${t('appVersion')}: `, el('span', { dir: 'ltr' }, `v${digitsOf(APP_VERSION)}`)),
