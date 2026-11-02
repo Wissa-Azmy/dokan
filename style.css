@@ -350,7 +350,10 @@ input[readonly] { background: #f5efe5; color: var(--muted); }
 .scan-frame::after {
   content: ''; position: absolute; inset-inline: 5%; top: 50%; height: 2px;
   background: #e53935; box-shadow: 0 0 8px rgba(229, 57, 53, 0.9);
+  animation: scan-line 2s ease-in-out infinite alternate;
 }
+@keyframes scan-line { from { top: 8%; } to { top: 92%; } }
+@media (prefers-reduced-motion: reduce) { .scan-frame::after { animation-duration: 4s; } }
 .scan-torch {
   position: absolute; bottom: 10px; inset-inline-end: 10px; width: 44px; height: 44px; border-radius: 50%;
   display: grid; place-items: center; border: 0; background: rgba(0, 0, 0, 0.55); color: #fff; cursor: pointer;
