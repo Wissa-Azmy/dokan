@@ -495,6 +495,8 @@ input[readonly] { background: #f5efe5; color: var(--muted); }
 .price-row input[type=checkbox] { width: 22px; height: 22px; flex: none; accent-color: var(--terracotta); }
 .price-change { display: grid; justify-items: end; gap: 2px; flex: none; }
 .price-change .old { text-decoration: line-through; }
+.row-sub.cost-parts { display: flex; flex-wrap: wrap; column-gap: 10px; row-gap: 1px; white-space: normal; overflow: visible; line-height: 1.4; font-size: 13px; }
+.cost-parts > span { white-space: nowrap; }
 .danger-zone { border-color: #f0c9c5; }
 
 /* Loading view, skeletons, version, update banner */

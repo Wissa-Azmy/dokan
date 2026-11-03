@@ -68,11 +68,13 @@ export function renderPrices(root, ctx, shopId) {
       box,
       el('span', { class: 'row-main' },
         el('strong', {}, localName(p)),
-        el('span', { class: 'row-sub' }, t('costLine', {
+        // Each part (cost, USD rate bought at, markup) stays whole and wraps onto its own line
+        // when the row is narrow, so nothing is cut off.
+        el('span', { class: 'row-sub cost-parts' }, t('costLine', {
           cost: fmtMoney(costOf.get(p.id).avgCost),
           rate: s.buyRate ? fmtNum(s.buyRate, 2) : '—',
           markup: fmtNum(s.markup.pct),
-        })),
+        }).split(' · ').map((part) => el('span', {}, part))),
       ),
       el('span', { class: 'price-change' },
         el('span', { class: 'muted small old' }, p.price != null ? fmtMoney(p.price) : t('noPrice')),
