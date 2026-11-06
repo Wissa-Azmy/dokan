@@ -124,6 +124,9 @@ h1, h2 { margin: 0; line-height: 1.3; }
 .actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
 .actions.stack { flex-direction: column; }
 .actions.stack .btn { width: 100%; }
+.admin-slot { display: grid; }
+.admin-slot:empty { display: none; }
+.admin-slot .btn { width: 100%; }
 
 /* Forms — 16px inputs so iOS doesn't zoom */
 .form { display: grid; gap: 14px; }

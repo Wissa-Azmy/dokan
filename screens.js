@@ -5,7 +5,7 @@ import { el, icon, iconButton, textField, selectField, setFieldError, focusFirst
 import { createShop } from './data.js';
 import { saveProfileField } from './sync.js';
 import { roleLabel, isCostManager } from './roles.js';
-import { auth, signOut } from './firebase.js';
+import { auth, signOut, db, doc, getDoc } from './firebase.js';
 import { APP_VERSION } from './version.js';
 import { homeSummary } from './summary.js';
 
@@ -13,6 +13,24 @@ let ctx = null; // { user, profile, shops: Map, go(path) }
 
 export function initScreens(context) {
   ctx = context;
+}
+
+// App admins (listed in admins/{uid}, added in the Firebase console) get a link to the usage
+// dashboard. Checked once per account; the link fills in its place when the answer arrives,
+// so nothing re-renders.
+let adminCheck = { uid: null, result: null };
+function adminLink() {
+  const slot = el('div', { class: 'admin-slot' });
+  const uid = ctx.user?.uid;
+  if (!uid) return slot;
+  const fill = (yes) => {
+    if (yes) slot.replaceChildren(el('a', { class: 'btn ghost', href: './admin/', target: '_blank', rel: 'noopener' }, icon('chart'), t('appUsage')));
+  };
+  if (adminCheck.uid !== uid) {
+    adminCheck = { uid, result: getDoc(doc(db, 'admins', uid)).then((d) => d.exists()).catch(() => false) };
+  }
+  adminCheck.result.then(fill);
+  return slot;
 }
 
 export function brand(big = false) {
@@ -85,6 +103,7 @@ export function renderShops(root) {
       el('div', { class: 'actions stack' },
         el('a', { class: 'btn primary', href: '#/new-shop' }, icon('plus'), t('createShop')),
         el('button', { type: 'button', class: 'btn ghost', onclick: () => ctx.go('#/join') }, icon('key'), t('joinShop')),
+        adminLink(),
       ),
     ),
   );
@@ -191,6 +210,7 @@ export function renderPrefs(root) {
     header(t('preferences'), { back: sessionStorage.getItem(PREFS_FROM) || '#/shops' }),
     el('main', { class: 'page' },
       form,
+      adminLink(),
       el('p', { class: 'muted small center' }, `${t('appVersion')}: `, el('span', { dir: 'ltr' }, `v${digitsOf(APP_VERSION)}`)),
       el('button', { type: 'button', class: 'btn ghost danger-text', onclick: () => signOut(auth) }, icon('logout'), t('signOut')),
     ),
