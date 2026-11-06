@@ -36,6 +36,7 @@ Live: https://wissa-azmy.github.io/dokan/
 | `scanner.js` | Camera barcode scanning: the browser's own reader, or ZXing (loaded on first use); flashlight, scan cards, typed fallback |
 | `barcode.js` | Shop barcodes (EAN-13 starting with 20) and drawing EAN-13 / Code 128 as SVG |
 | `labels.js` | Barcodes & stickers: generate missing barcodes, print stickers, barcode reader help and test |
+| `admin/` | Separate usage dashboard for the app owner (users, shops, activity per shop) — see below |
 | `receipt.js` | Receipt on screen, WhatsApp / share text, 58 or 80 mm printing; shared print helper |
 | `sales.js` | Sales per day and branch, one sale, returns |
 | `customers.js` | Customers, credit balances, statements, payments received |
@@ -86,6 +87,26 @@ Live: https://wissa-azmy.github.io/dokan/
 - **Data:** Firestore keeps a copy on each device. Selling, receiving goods, adjustments, expenses and the cash drawer all work offline and sync when the internet is back.
 - **The app itself:** `sw.js` keeps the app files, the Firebase SDK and the font on the device. After the app has been opened online twice, it opens without internet too. App files always load fresh when online, so a new push shows on the next reload.
 - **Needs internet:** joining a shop, creating invites, costing a purchase, deleting things with history, exports, backup and restore.
+
+## Usage dashboard (for the app owner)
+
+A separate page at **`/admin/`** (for example https://wissa-azmy.github.io/dokan/admin/) shows how far Dokan reaches:
+
+- **Totals:** registered users (and new this week / 30 days), users who are in a shop, shops (and new ones), active shops, products, stock movements and sales across all shops.
+- **Growth:** sign-ups and new shops per week for the last 12 weeks.
+- **Every shop:** owner email, status (Active / Quiet / Inactive / Not started), last activity, team size, branches, products, stock movements (all and last 7 days), sales (all and last 30 days), net sales in the last 30 days, created date. Sort by any column, search, filter by status, export CSV.
+- **Latest sign-ups:** the 15 newest accounts.
+
+It uses the same Firebase project and sign-in as the app, but only **admin** accounts can read anything.
+
+**Make yourself an admin (one time):**
+1. Sign up in the app (or use your existing account), open `/admin/`, and sign in. It shows your account's UID with a Copy button.
+2. Firebase console → Firestore Database → Data → **Start collection** `admins` → Document ID: your UID → add any field (for example `note` = `me`) → Save.
+3. Publish the latest `firestore.rules` (Firestore → Rules → paste → Publish), then refresh `/admin/`.
+
+**What admins can read:** profiles, shop documents and the members, locations, products, customers, movements, sales and dailyStats collections, read-only. Costs, supplier and customer accounts, payments, expenses, cash days and backups stay closed. Admins can't write anything. The `admins` collection can only be changed in the console.
+
+**Cost:** counts use Firestore count/sum queries, which charge 1 read per 1,000 documents counted, plus about 13 reads per shop for each refresh. With 100 shops a refresh is roughly 1,500 reads (the free plan allows 50,000 a day). The dashboard only loads when you open or refresh it.
 
 ## Barcodes, stickers and barcode readers
 

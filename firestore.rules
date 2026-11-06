@@ -9,6 +9,10 @@ service cloud.firestore {
     function signedIn() { return request.auth != null; }
     function isMe(uid) { return signedIn() && request.auth.uid == uid; }
 
+    // App admins (the usage dashboard in /admin). Added by hand in the Firebase console as
+    // admins/{uid}; nobody can create one from an app.
+    function isAdmin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+
     function shopPath(shopId) { return /databases/$(database)/documents/shops/$(shopId); }
     function memberPath(shopId) { return /databases/$(database)/documents/shops/$(shopId)/members/$(request.auth.uid); }
     function invitePath(shopId, code) { return /databases/$(database)/documents/shops/$(shopId)/invites/$(code); }
@@ -65,7 +69,7 @@ service cloud.firestore {
 
     // ---------- User profiles ----------
     match /users/{uid} {
-      allow read: if isMe(uid);
+      allow read: if isMe(uid) || isAdmin();
       allow create: if isMe(uid)
         && request.resource.data.keys().hasOnly(['name', 'email', 'lang', 'digits', 'shopIds', 'lastShopId', 'createdAt', 'updatedAt'])
         && request.resource.data.shopIds is list;
@@ -86,9 +90,15 @@ service cloud.firestore {
       allow delete: if signedIn() && isOwner(resource.data.shopId);
     }
 
+    // ---------- Admins: each admin may check their own entry; written only in the console ----------
+    match /admins/{uid} {
+      allow read: if isMe(uid);
+      allow write: if false;
+    }
+
     // ---------- Shops ----------
     match /shops/{shopId} {
-      allow read: if isMember(shopId);
+      allow read: if isMember(shopId) || isAdmin();
       allow create: if signedIn()
         && request.resource.data.ownerId == request.auth.uid
         && getAfter(memberPath(shopId)).data.role == 'owner';
@@ -359,6 +369,12 @@ service cloud.firestore {
       }
       match /costs/{productId}/history/{historyId} {
         allow read, write: if restoring(shopId);
+      }
+      // The usage dashboard counts these; admins can read them but never write.
+      // Money details (costs, accounts, payments, expenses, cash, backups) stay closed to admins.
+      match /{collectionName}/{docId} {
+        allow read: if isAdmin()
+          && collectionName in ['members', 'locations', 'products', 'customers', 'movements', 'sales', 'dailyStats'];
       }
       // Collections not listed here are closed by default.
     }

@@ -2,7 +2,7 @@
 // shows up on the next reload) with the cached copy as the offline fallback. Firebase SDK files
 // and fonts are versioned, so they're served from the cache once fetched.
 // Firestore traffic and the dollar-rate APIs are never touched here.
-const CACHE = 'dokan-v5';
+const CACHE = 'dokan-v6';
 
 const APP_FILES = [
   './', './index.html', './style.css', './manifest.webmanifest', './icon.svg',
@@ -49,6 +49,8 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
   const own = url.origin === self.location.origin;
   if (!own && !isLibrary(url)) return;
+  // The usage dashboard in /admin is online-only and never falls back to the shop app.
+  if (own && url.pathname.includes('/admin/')) return;
 
   if (own) {
     event.respondWith(
