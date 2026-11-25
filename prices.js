@@ -57,7 +57,7 @@ export function renderPrices(root, ctx, shopId) {
   const countSelected = () => [...checks.values()].filter((c) => c.checked).length;
   const updateBtn = () => { const n = countSelected(); applyBtn.textContent = t('updatePrices', { n: fmtNum(n) }); applyBtn.disabled = !n; };
 
-  const list = el('div', { class: 'list' });
+  const list = el('div', { class: 'list cols' });
   if (!rows.length) list.append(el('p', { class: 'empty' }, t('pricesOk')));
   for (const { p, s } of rows) {
     const box = el('input', { type: 'checkbox', checked: true, 'aria-label': localName(p) });

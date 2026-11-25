@@ -21,7 +21,7 @@ export function renderTeam(root, ctx, shopId) {
   const invites = owner ? ctx.live(`invites:${shopId}`, (set) => watchCollection(['shops', shopId, 'invites'], set, where('usedBy', '==', null))) : [];
   const locName = (id) => localName(locations.find((l) => l.id === id)) || '—';
 
-  const memberList = el('div', { class: 'list' });
+  const memberList = el('div', { class: 'list cols' });
   if (!members) memberList.append(el('p', { class: 'empty' }, t('loading')));
   const order = { owner: 0, manager: 1, employee: 2 };
   for (const m of [...(members || [])].sort((a, b) => order[a.role] - order[b.role] || String(a.name).localeCompare(String(b.name)))) {
@@ -51,7 +51,7 @@ export function renderTeam(root, ctx, shopId) {
   const inviteList = owner && pending.length
     ? el('section', { class: 'section' },
       el('h2', { class: 'section-title' }, t('pendingInvites')),
-      el('div', { class: 'list' }, pending.map((i) => el('div', { class: 'card row' },
+      el('div', { class: 'list cols' }, pending.map((i) => el('div', { class: 'card row' },
         el('span', { class: 'row-icon' }, icon('key')),
         el('span', { class: 'row-main' },
           el('strong', { class: 'code', dir: 'ltr' }, i.code),

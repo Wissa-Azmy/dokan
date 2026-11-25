@@ -44,7 +44,7 @@ export function renderCustomers(root, ctx, shopId) {
 
   const search = el('input', { type: 'search', class: 'input', placeholder: t('searchCustomers'), autocomplete: 'off' });
   const owingOnly = el('input', { type: 'checkbox' });
-  const list = el('div', { class: 'list' });
+  const list = el('div', { class: 'list cols' });
   let cur = { customers, accounts };
 
   function draw() {

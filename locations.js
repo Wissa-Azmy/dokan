@@ -21,7 +21,7 @@ export function renderLocations(root, ctx, shopId) {
   const canEdit = isManager(me);
   const visible = (locations || []).filter((l) => canUseLocation(me, l.id));
 
-  const list = el('div', { class: 'list' });
+  const list = el('div', { class: 'list cols' });
   if (!locations) list.append(el('p', { class: 'empty' }, t('loading')));
   else if (!visible.length) list.append(el('p', { class: 'empty' }, t('noLocationsYet')));
   for (const loc of visible) {

@@ -55,7 +55,7 @@ export function renderStock(root, ctx, shopId) {
   const locSelect = el('select', { class: 'input select' });
   const search = el('input', { type: 'search', class: 'input', placeholder: t('searchProducts'), autocomplete: 'off', enterkeyhint: 'search' });
   const lowBox = el('input', { type: 'checkbox' });
-  const list = el('div', { class: 'list' });
+  const list = el('div', { class: 'list cols' });
   const footer = el('p', { class: 'muted small center' });
   let cur = data;
 

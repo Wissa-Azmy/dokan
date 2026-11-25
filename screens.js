@@ -157,7 +157,7 @@ export function renderShopHome(root, shopId) {
   }
   root.replaceChildren(
     header(shop ? localName(shop) : '', { back: '#/shops' }),
-    el('main', { class: 'page' },
+    el('main', { class: 'page home-page' },
       el('section', { class: 'card hero home-card' },
         el('div', { class: 'home-head' },
           el('h2', {}, shop ? localName(shop) : ''),

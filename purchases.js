@@ -69,11 +69,11 @@ export function renderPurchases(root, ctx, shopId) {
       el('a', { class: 'btn primary', href: `#/shop/${shopId}/purchase/new` }, icon('plus'), costs ? t('newPurchase') : t('receiveGoods')),
       pendingRows.length ? el('section', { class: 'section' },
         el('h2', { class: 'section-title' }, costs ? t('waitingCosts') : t('receiveGoods')),
-        el('div', { class: 'list' }, pendingRows.map(row)),
+        el('div', { class: 'list cols' }, pendingRows.map(row)),
       ) : null,
       costs ? el('section', { class: 'section' },
         el('h2', { class: 'section-title' }, t('recentPurchases')),
-        el('div', { class: 'list' },
+        el('div', { class: 'list cols' },
           !recent ? el('p', { class: 'empty' }, t('loading'))
             : recentRows.length ? recentRows.map(row) : el('p', { class: 'empty' }, t('noPurchases')),
         ),

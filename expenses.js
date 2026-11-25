@@ -69,7 +69,7 @@ export function renderExpenses(root, ctx, shopId) {
         el('strong', { class: 'big-money' }, fmtMoney(total)),
         byType.length ? el('div', { class: 'row-meta' }, byType.map((x) => el('span', { class: 'badge' }, `${t(`exp_${x.k}`)} ${fmtMoney(x.sum)}`))) : null,
       ),
-      el('div', { class: 'list' },
+      el('div', { class: 'list cols' },
         !list ? el('p', { class: 'empty' }, t('loading'))
           : !rows.length ? el('p', { class: 'empty' }, t('noExpenses'))
             : rows.map((x) => el('div', { class: 'card row' },

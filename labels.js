@@ -112,7 +112,7 @@ export function renderLabels(root, ctx, shopId, preselectId) {
     el('option', { value: 'missing' }, t('noBarcode')),
     el('option', { value: 'chosen' }, t('filterChosen')),
   );
-  const list = el('div', { class: 'list' });
+  const list = el('div', { class: 'list cols' });
   const footer = el('p', { class: 'muted small center' });
   const countEl = el('strong', {});
   const printBtn = el('button', { type: 'button', class: 'btn primary', onclick: () => print() }, icon('print'), t('print'));

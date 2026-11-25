@@ -44,7 +44,7 @@ export function renderProducts(root, ctx, shopId) {
 
   const search = el('input', { type: 'search', class: 'input', placeholder: t('searchProducts'), autocomplete: 'off', enterkeyhint: 'search' });
   const catSelect = el('select', { class: 'input select' });
-  const list = el('div', { class: 'list' });
+  const list = el('div', { class: 'list cols' });
   const footer = el('p', { class: 'muted small center' });
   let current = { products, categories };
 

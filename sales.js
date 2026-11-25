@@ -50,7 +50,7 @@ export function renderSales(root, ctx, shopId) {
         el('span', { class: 'muted' }, t('salesCount', { n: fmtNum(rows.length) })),
         el('strong', { class: 'big-money' }, fmtMoney(sum)),
       ),
-      el('div', { class: 'list' },
+      el('div', { class: 'list cols' },
         !sales ? el('p', { class: 'empty' }, t('loading'))
           : !rows.length ? el('p', { class: 'empty' }, t('noSales'))
             : rows.map((s) => el('a', { class: 'card row link-row', href: `#/shop/${shopId}/sale/${s.id}` },

@@ -42,7 +42,7 @@ export function renderCategories(root, ctx, shopId) {
   const products = useProducts(ctx, shopId) || [];
   const countIn = (id) => products.filter((p) => p.categoryId === id).length;
 
-  const list = el('div', { class: 'list' });
+  const list = el('div', { class: 'list cols' });
   if (!categories) list.append(el('p', { class: 'empty' }, t('loading')));
   else if (!categories.length) list.append(el('p', { class: 'empty' }, t('noCategories')));
 

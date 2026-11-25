@@ -43,7 +43,7 @@ export function renderSuppliers(root, ctx, shopId) {
   if (view && view.shopId === shopId && root.contains(view.page)) return view.update(suppliers, accounts);
 
   const search = el('input', { type: 'search', class: 'input', placeholder: t('searchSuppliers'), autocomplete: 'off' });
-  const list = el('div', { class: 'list' });
+  const list = el('div', { class: 'list cols' });
   let cur = { suppliers, accounts };
 
   function draw() {
