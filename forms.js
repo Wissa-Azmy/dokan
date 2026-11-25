@@ -47,6 +47,7 @@ const paths = {
   barcode: '<path d="M4 5v14M7 5v14M10 5v14M14 5v14M16.5 5v14M20 5v14"/>',
   scan: '<path d="M3 7V4h3M18 4h3v3M21 17v3h-3M6 20H3v-3M7 8v8M10 8v8M13 8v8M16.5 8v8"/>',
   torch: '<path d="M7 3h10v4l-3 4v9a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-9L7 7z"/><path d="M7 7h10M12 13v2.5"/>',
+  download: '<path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 20h14"/>',
   help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7"/><path d="M12 17h.01"/>',
 };
 

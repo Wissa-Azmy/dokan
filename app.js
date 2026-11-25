@@ -4,6 +4,7 @@ import { t, setLang, getLang } from './i18n.js';
 import { el } from './forms.js';
 import { setDigits, getDigits } from './format.js';
 import { renderLoadingView, renderLoadError, setLoadStatus, startUpdateChecks } from './loading.js';
+import './install.js';
 
 const root = document.getElementById('app');
 

@@ -2,16 +2,16 @@
 // shows up on the next reload) with the cached copy as the offline fallback. Firebase SDK files
 // and fonts are versioned, so they're served from the cache once fetched.
 // Firestore traffic and the dollar-rate APIs are never touched here.
-const CACHE = 'dokan-v6';
+const CACHE = 'dokan-v8';
 
 const APP_FILES = [
-  './', './index.html', './style.css', './manifest.webmanifest', './icon.svg',
+  './', './index.html', './style.css', './manifest.webmanifest', './icon.svg', './icon-512.png',
   './app.js', './auth.js', './backup.js', './buying.js', './cash.js', './categories.js', './config.js', './count.js',
   './csv.js', './customers.js', './dashboard.js', './data.js', './expenses.js', './firebase.js', './format.js',
   './forms.js', './fx.js', './i18n.js', './locations.js', './movements.js', './picker.js', './prices.js',
   './pricing.js', './products.js', './purchases.js', './rates.js', './receipt.js', './roles.js', './sales.js',
   './scanner.js', './screens.js', './sell.js', './selling.js', './settings.js', './stock.js', './suppliers.js',
-  './sync.js', './team.js', './version.js', './loading.js', './summary.js', './barcode.js', './labels.js',
+  './sync.js', './team.js', './version.js', './loading.js', './summary.js', './barcode.js', './labels.js', './install.js',
 ];
 
 const isLibrary = (url) =>
