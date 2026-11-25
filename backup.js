@@ -271,7 +271,7 @@ export function renderBackup(root, ctx, shopId) {
 
   root.replaceChildren(
     header(t('backupTitle'), { back }),
-    el('main', { class: 'page' },
+    el('main', { class: 'page cols-page' },
       el('p', { class: 'muted' }, t('backupIntro')),
       status,
       el('section', { class: 'card form' },

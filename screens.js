@@ -99,7 +99,7 @@ export function renderShops(root) {
   }
   root.replaceChildren(
     header(t('myShops')),
-    el('main', { class: 'page' },
+    el('main', { class: 'page shops-page' },
       list,
       el('div', { class: 'actions stack' },
         el('a', { class: 'btn primary', href: '#/new-shop' }, icon('plus'), t('createShop')),

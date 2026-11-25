@@ -149,7 +149,7 @@ export function renderCustomer(root, ctx, shopId, customerId) {
 
   root.replaceChildren(
     header(c.name, { back }),
-    el('main', { class: 'page' },
+    el('main', { class: 'page detail-page' },
       el('section', { class: 'card hero balance-card' },
         el('span', { class: 'muted' }, bal < 0 ? t('weOweCustomer') : t('customerOwes')),
         el('strong', { class: 'big-money' }, fmtMoney(Math.abs(bal))),

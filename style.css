@@ -568,30 +568,59 @@ a.home-stat:active { transform: scale(0.98); }
 .offline { background: var(--mustard); color: #3b2a05; text-align: center; padding: calc(6px + env(safe-area-inset-top)) 12px 6px; font-size: 14px; font-weight: 700; }
 
 /* ---------- Wide screens (computers, large tablets) ----------
-   Phones keep the single 560px column. From 900px:
-   - forms and detail screens get a comfortable 760px column;
-   - the shop home, lists of products/customers/sales…, the dashboard and the sell screen use
-     up to 1180px, with cards side by side;
-   - the top bar and bottom bars line up with the page column. */
+   Below 900px every screen keeps the single phone column. From 900px there are five layouts:
+   - plain pages (product and purchase forms, preferences, a sale): one 760px column;
+   - list pages (.list.cols, My shops): cards side by side, up to 1180px;
+   - detail pages (a customer, a supplier, the USD rate): balance and buttons on the side,
+     the statement or history next to them;
+   - card pages (shop settings, backup, cash, a saved purchase): cards in two columns;
+   - the shop home, sell and dashboard: their own layouts below.
+   The top bar and the bottom bars line up with the page column (--col). */
 @media (min-width: 900px) {
   :root { --col: 760px; }
-  :root:has(.page.home-page, .list.cols, .page.wide, .shop-list, .sell-page) { --col: 1180px; }
+  :root:has(.page.home-page, .page.wide, .page.sell-page, .page.detail-page, .page.cols-page, .list.cols, .shop-list) { --col: 1180px; }
   .page { max-width: var(--col); padding-inline: 20px; }
-  .page.wide, .page.home-page, .page.sell-page, .page:has(.list.cols, .shop-list) { max-width: 1180px; }
+  .page.wide, .page.home-page, .page.sell-page, .page.detail-page, .page.cols-page, .page:has(.list.cols, .shop-list) { max-width: 1180px; }
   .topbar { padding-inline: max(14px, calc((100vw - var(--col)) / 2 + 20px)); }
+
+  /* Buttons placed straight on a page ("+ New …", "Add branch", "Invite someone") sit at the
+     end of the row at a normal width instead of stretching across the screen. */
+  .page > .btn, .fab { justify-self: end; width: auto; min-width: 260px; }
+  .sticky-actions:has(> .btn.wide) { display: flex; justify-content: flex-end; }
+  .sticky-actions > .btn.wide { width: auto; min-width: 260px; }
 
   /* Lists: as many 340px+ cards per row as fit. Loading/empty notes span the row. */
   .list.cols, .shop-list { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); align-items: stretch; }
   .list.cols > :not(.card), .shop-list > :not(.card) { grid-column: 1 / -1; }
-
-  /* Search and filters stay a sensible width instead of stretching across the screen. */
   .page:has(.list.cols) > .filters { grid-template-columns: minmax(0, 520px) minmax(0, 300px); justify-content: start; }
   .page:has(.list.cols) > .filters .check.inline { grid-column: auto; align-self: center; }
 
-  /* "+ New …" buttons sit at the end of the row instead of spanning it. */
-  .fab { justify-self: end; min-width: 260px; }
-  .sticky-actions:has(> .btn.wide) { display: flex; justify-content: flex-end; }
-  .sticky-actions > .btn.wide { width: auto; min-width: 260px; }
+  /* My shops: the buttons in one row under the cards. */
+  .page.shops-page > .actions.stack { flex-direction: row; flex-wrap: wrap; justify-content: flex-start; }
+  .page.shops-page > .actions.stack > .btn, .page.shops-page .admin-slot .btn { width: auto; min-width: 220px; }
+  .page.shops-page .admin-slot { display: contents; }
+
+  /* Detail pages: balance card and its buttons on the side, the list beside them. */
+  .page.detail-page {
+    grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+    column-gap: 24px; align-items: start;
+  }
+  .page.detail-page > * { grid-column: 2; }
+  .page.detail-page > .balance-card { grid-column: 1; grid-row: 1; position: sticky; top: 88px; }
+  .page.detail-page > .actions { grid-column: 1; grid-row: 2; flex-direction: column; }
+  .page.detail-page > .actions > .btn { width: 100%; }
+  .page.detail-page > p.muted { grid-column: 1; grid-row: 3; }
+  .page.detail-page > .section-title { grid-row: 1; }
+  .page.detail-page > .section-title + .list { grid-row: 2 / span 2; }
+
+  /* Card pages: cards flow into two columns, top to bottom, in their usual order.
+     The settings form's sections join the flow. Filters and notes span both columns. */
+  .page.cols-page { display: block; columns: 2 360px; column-gap: 18px; }
+  .page.cols-page > *, .page.cols-page > form.form > * { break-inside: avoid; margin: 0 0 14px; }
+  .page.cols-page > form.form { display: contents; }
+  .page.cols-page > .filters, .page.cols-page > .empty, .page.cols-page > .note { column-span: all; }
+  .page.cols-page > .btn { display: flex; width: 100%; }
 
   /* Shop home: summary and Sell across the top, then the three groups side by side. */
   .page.home-page { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 18px; align-items: start; }
@@ -609,3 +638,4 @@ a.home-stat:active { transform: scale(0.98); }
   /* Dialogs get a little more room. */
   .dialog { width: min(600px, calc(100vw - 48px)); }
 }
+

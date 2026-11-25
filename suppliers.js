@@ -141,7 +141,7 @@ export function renderSupplier(root, ctx, shopId, supplierId) {
 
   root.replaceChildren(
     header(s.name, { back }),
-    el('main', { class: 'page' },
+    el('main', { class: 'page detail-page' },
       el('section', { class: 'card hero balance-card' },
         el('span', { class: 'muted' }, bal < 0 ? t('theyOwe') : t('weOwe')),
         el('strong', { class: 'big-money' }, fmtMoney(Math.abs(bal))),

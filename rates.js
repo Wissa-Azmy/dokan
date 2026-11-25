@@ -26,7 +26,7 @@ export function renderRate(root, ctx, shopId) {
 
   root.replaceChildren(
     header(t('usdRateTitle'), { back: `#/shop/${shopId}` }),
-    el('main', { class: 'page' },
+    el('main', { class: 'page detail-page' },
       el('section', { class: 'card hero balance-card' },
         el('span', { class: 'muted' }, t('rateToday')),
         el('strong', { class: 'big-money' }, s.usdRate ? `${fmtNum(s.usdRate, 4)} ${t('egp')}` : '—'),

@@ -394,7 +394,7 @@ function renderView(root, ctx, shopId, p, { products, locations, suppliers, back
 
   root.replaceChildren(
     header(p.number, { back }),
-    el('main', { class: 'page' },
+    el('main', { class: 'page cols-page' },
       el('section', { class: 'card form' },
         el('div', { class: 'sum-line' }, el('span', {}, t('supplier')), el('strong', {}, supplierName(suppliers, p.supplierId))),
         el('div', { class: 'sum-line' }, el('span', {}, t('date')), el('span', {}, fmtDate(p.date))),

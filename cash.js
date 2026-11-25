@@ -143,5 +143,5 @@ export function renderCash(root, ctx, shopId) {
     ];
   }
 
-  root.replaceChildren(header(t('cashDay'), { back }), el('main', { class: 'page' }, top, ...body));
+  root.replaceChildren(header(t('cashDay'), { back }), el('main', { class: 'page cols-page' }, top, ...body));
 }

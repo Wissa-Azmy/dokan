@@ -69,7 +69,7 @@ export function renderSettings(root, ctx, shopId) {
 
   root.replaceChildren(
     header(t('shopSettings'), { back: `#/shop/${shopId}` }),
-    el('main', { class: 'page' },
+    el('main', { class: 'page cols-page' },
       form,
       formulaBox(s),
       el('section', { class: 'card form danger-zone' },
